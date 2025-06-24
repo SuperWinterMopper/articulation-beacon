@@ -1,0 +1,19 @@
+# JUCE
+Builds/
+*.jucer
+
+# Visual Studio / MSBuild
+.vs/
+*.sln
+*.vcxproj*
+*.filters
+*.user
+*.obj
+*.pdb
+ipch/
+GeneratedFiles/
+
+# macOS / Xcode (if you ever build there)
+*.xcworkspace/
+*.xcodeproj/
+*.xcuserstate
