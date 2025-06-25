@@ -23,6 +23,10 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
 
+    //Necessary to implement due to ChangeListener being an abstract class.
+    //I believe this functions effectively as a safety net for when you don't explicitly set proper state code
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
 private:
     //==============================================================================
     enum TransportState

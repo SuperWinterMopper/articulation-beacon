@@ -83,11 +83,20 @@ void MainComponent::resized()
     // This is called when the MainContentComponent is resized.
     // If you add any child components, this is where you should
     // update their positions.
+    playButton.setBounds(10, 10, getWidth() - 20, 20);
+    stopButton.setBounds(10, 70, getWidth() - 20, 20);
 }
 
-void changeListenerCallback(juce::ChangeBroadcaster* source)
+void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    //continue here I believe we just copy what's in tutorial
+    if (source == &transportSource)
+    {
+        //this aligns the `state` variable to what's actually true, if it's not
+        if (transportSource.isPlaying())
+            changeState(Playing);
+        else
+            changeState(Stopped);
+    }
 }
 
 void MainComponent::playButtonClicked()
