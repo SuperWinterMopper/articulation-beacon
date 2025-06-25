@@ -1,8 +1,19 @@
 #include "MainComponent.h"
 
 //==============================================================================
-MainComponent::MainComponent()
+MainComponent::MainComponent() : state(Stopped)
 {
+    // Initialize buttons 
+    addAndMakeVisible(playButton);
+    playButton.setButtonText("Play audio");
+    playButton.onClick = [this] { playButtonClicked(); };
+
+    formatManager.registerBasicFormats(); // register the standard audio formats
+    transportSource.addChangeListener(this);
+
+
+
+
     // Make sure you set the size of the component after
     // you add any child components.
     setSize (800, 600);
@@ -72,4 +83,37 @@ void MainComponent::resized()
     // This is called when the MainContentComponent is resized.
     // If you add any child components, this is where you should
     // update their positions.
+}
+
+void changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    //continue here I believe we just copy what's in tutorial
+}
+
+void MainComponent::playButtonClicked()
+{
+    changeState(Starting);
+}
+
+void MainComponent::changeState(TransportState newState)
+{
+    //if (newState != state) {
+    //    state = newState;
+
+    //    switch (state) {
+    //        case Stopped: //switches to this state when stopping has finished
+    //            break;
+
+    //        case Starting:
+
+    //            break;
+
+    //        case Playing:
+    //            break;
+
+    //        case Stopping:
+    //            break;
+
+    //    }
+    //}
 }
