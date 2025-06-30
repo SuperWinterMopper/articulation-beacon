@@ -3,55 +3,58 @@
 //==============================================================================
 MainComponent::MainComponent() : state(Stopped)
 {
-    // Initialize buttons 
-    //==============================================================================
-    addAndMakeVisible(&playButton);
-    playButton.setButtonText("Play audio");
-    playButton.onClick = [this] { playButtonClicked(); };
-    playButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
-    playButton.setEnabled(true);
+    //// Initialize buttons 
+    ////==============================================================================
+    //addAndMakeVisible(&playButton);
+    //playButton.setButtonText("Play audio");
+    //playButton.onClick = [this] { playButtonClicked(); };
+    //playButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+    //playButton.setEnabled(true);
 
-    addAndMakeVisible(&stopButton);
-    stopButton.setButtonText("Stop audio");
-    stopButton.onClick = [this] { stopButtonClicked(); };
-    stopButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkred);
-    stopButton.setEnabled(false);
-    //==============================================================================
+    //addAndMakeVisible(&stopButton);
+    //stopButton.setButtonText("Stop audio");
+    //stopButton.onClick = [this] { stopButtonClicked(); };
+    //stopButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkred);
+    //stopButton.setEnabled(false);
+    ////==============================================================================
 
-    formatManager.registerBasicFormats(); // register the standard audio formats
-    transportSource.addChangeListener(this);
+    //formatManager.registerBasicFormats(); // register the standard audio formats
+    //transportSource.addChangeListener(this);
 
-    // Make sure you set the size of the component after
-    // you add any child components.
-    setSize (800, 600);
+    //// Make sure you set the size of the component after
+    //// you add any child components.
+    //setSize (800, 600);
 
 
-    //Set audio channels
-    //==============================================================================
-    //int numOutputChannels = getNumOutputChannels();
-    int numOutputChannels = 2;
-    int numInputChannels = 0; //we're just trying output for now
+    ////Set audio channels
+    ////==============================================================================
+    ////int numOutputChannels = getNumOutputChannels();
+    //int numOutputChannels = 2;
+    //int numInputChannels = 0; //we're just trying output for now
 
-    // Some platforms require permissions to open input channels so request that here
-    if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
-        && ! juce::RuntimePermissions::isGranted (juce::RuntimePermissions::recordAudio))
-    {
-        juce::RuntimePermissions::request (juce::RuntimePermissions::recordAudio,
-                                           [&] (bool granted) { setAudioChannels (granted ? numInputChannels : 0, numOutputChannels); });
-    }
-    else
-    {
-        // Specify the number of input and output channels that we want to open
-        // For now set to stereo output
+    //// Some platforms require permissions to open input channels so request that here
+    //if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
+    //    && ! juce::RuntimePermissions::isGranted (juce::RuntimePermissions::recordAudio))
+    //{
+    //    juce::RuntimePermissions::request (juce::RuntimePermissions::recordAudio,
+    //                                       [&] (bool granted) { setAudioChannels (granted ? numInputChannels : 0, numOutputChannels); });
+    //}
+    //else
+    //{
+    //    // Specify the number of input and output channels that we want to open
+    //    // For now set to stereo output
 
-        setAudioChannels (numInputChannels, numOutputChannels);
-    }
+    //    setAudioChannels (numInputChannels, numOutputChannels);
+    //}
 
-    //this will hook up transportSource to the right audio file
-    setUpAudioFile();
+    ////this will hook up transportSource to the right audio file
+    //setUpAudioFile();
 
-    // Set up file logging
-    setUpLogger();
+    //// Set up file logging
+    //setUpLogger();
+
+    addAndMakeVisible(exercise1);
+    setSize(1280, 720);
 }
 
 MainComponent::~MainComponent()
@@ -113,6 +116,7 @@ void MainComponent::resized()
     // update their positions.
     playButton.setBounds(10, 10, getWidth() - 20, 20);
     stopButton.setBounds(10, 70, getWidth() - 20, 20);
+    exercise1.setBounds(10, 10, getWidth() - 20, getHeight() - 50);
 }
 
 void MainComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
