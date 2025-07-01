@@ -117,7 +117,10 @@ void Exercise1::paint (juce::Graphics& g)
        You should replace everything in this method with your own
        drawing code..
     */
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    //g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillAll(juce::Colours::lightblue);
+    g.setColour(juce::Colours::darkblue);
+
 }
 
 void Exercise1::resized()
