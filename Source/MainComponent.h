@@ -24,7 +24,6 @@ public:
 
         g.setColour(backgroundColour);
         g.fillRoundedRectangle(buttonArea, cornerSize);
-        //g.fillRect(buttonArea);
     }
 
     void drawButtonText(juce::Graphics& g, juce::TextButton& button, bool isMouseOverButton, bool isButtonDown) override
@@ -67,8 +66,11 @@ public:
     void resized() override;
 
 private:
+    //design of app overall is defined here
     ABLookAndFeel ABLook;
+
     ExerciseSelector exerciseSelector;
+    juce::Label appTitle;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
