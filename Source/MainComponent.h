@@ -8,26 +8,25 @@ class ABLookAndFeel : public juce::LookAndFeel_V4
 public:
     ABLookAndFeel()
     {
-        
     }
-    void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour, bool, bool isButtonDown) override
+
+    void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour, bool isMouseOverButton, bool isButtonDown) override
     {
-        auto buttonArea = button.getLocalBounds();
+        auto buttonArea = button.getLocalBounds().toFloat();
         auto edge = 4;
+        float cornerSize = 12.0f;
 
         buttonArea.removeFromLeft(edge);
         buttonArea.removeFromTop(edge);
-
-        // shadow
-        g.setColour(juce::Colours::darkgrey.withAlpha(0.5f));
-        g.fillRect(buttonArea);
 
         auto offset = isButtonDown ? -edge / 2 : -edge;
         buttonArea.translate(offset, offset);
 
         g.setColour(backgroundColour);
-        g.fillRect(buttonArea);
+        g.fillRoundedRectangle(buttonArea, cornerSize);
+        //g.fillRect(buttonArea);
     }
+
     void drawButtonText(juce::Graphics& g, juce::TextButton& button, bool isMouseOverButton, bool isButtonDown) override
     {
         auto font = getTextButtonFont(button, button.getHeight());
@@ -42,7 +41,6 @@ public:
         auto fontHeight = juce::roundToInt(font.getHeight() * 0.6f);
         auto leftIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnLeft() ? 4 : 2));
         auto rightIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnRight() ? 4 : 2));
-        //! [drawButtonText]
         auto textWidth = button.getWidth() - leftIndent - rightIndent;
 
         auto edge = 4;
@@ -52,6 +50,10 @@ public:
             g.drawFittedText(button.getButtonText(),
                 leftIndent + offset, yIndent + offset, textWidth, button.getHeight() - yIndent * 2 - edge,
                 juce::Justification::centred, 2);
+    }
+
+    juce::Font getTextButtonFont(juce::TextButton& button, int buttonHeight) {
+        return juce::Font((float)buttonHeight * .75f);
     }
 };
 
