@@ -85,5 +85,7 @@ private:
     //"ARTICULATION BEACON" logo
     juce::Label appTitle;
 
+    void exerciseOpener(int exerciseNum);
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

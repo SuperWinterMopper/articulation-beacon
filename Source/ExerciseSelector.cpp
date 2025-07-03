@@ -1,32 +1,9 @@
-/*
-  ==============================================================================
-
-    ExerciseSelector.cpp
-    Created: 30 Jun 2025 8:15:56pm
-    Author:  afkhe
-
-  ==============================================================================
-*/
-
 #include <JuceHeader.h>
 #include "ExerciseSelector.h"
 
 //==============================================================================
 ExerciseSelector::ExerciseSelector()
 {
-    //addAndMakeVisible(exercise1Button);
-    //exercise1Button.setButtonText("Exercise 1");
-    //exercise1Button.onClick = [this] { if(onSelectExercise) onSelectExercise(1) };
-
-    //addAndMakeVisible(exercise2Button);
-    //exercise2Button.setButtonText("Exercise 2");
-
-    //addAndMakeVisible(exercise3Button);
-    //exercise3Button.setButtonText("Exercise 3");
-
-    //addAndMakeVisible(exercise4Button);
-    //exercise4Button.setButtonText("Exercise 4");
-
     for (int i = 0; i < NUM_EXERCISES; i++) {
         juce::TextButton& exerciseButton = exerciseButtons[i];
         addAndMakeVisible(exerciseButton);
@@ -48,8 +25,8 @@ void ExerciseSelector::paint (juce::Graphics& g)
 
 void ExerciseSelector::resized()
 {
-    int buttonHeight = 50;
-    int spacing = 20;
+    const int buttonHeight = 50;
+    const int spacing = 20;
     int y = 0;
 
     for (int i = 0; i < NUM_EXERCISES; i++) {
@@ -57,13 +34,4 @@ void ExerciseSelector::resized()
         exerciseButton.setBounds(0, y, getWidth(), buttonHeight);
         y += buttonHeight + spacing;
     }
-
-    //exercise1Button.setBounds(0, y, getWidth(), buttonHeight);
-    //y += buttonHeight + spacing;
-    //exercise2Button.setBounds(0, y, getWidth(), buttonHeight);
-    //y += buttonHeight + spacing;
-    //exercise3Button.setBounds(0, y, getWidth(), buttonHeight);
-    //y += buttonHeight + spacing;
-    //exercise4Button.setBounds(0, y, getWidth(), buttonHeight);
-    //y += buttonHeight + spacing;
 }

@@ -3,15 +3,16 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
+    exerciseSelector.onSelectExercise = [this] (int i) {exerciseOpener(i); };
     addAndMakeVisible(exerciseSelector);
     
     appTitle.setFont(juce::Font(70.0f, juce::Font::bold));
     appTitle.setText("ARTICULATION BEACON", juce::dontSendNotification);
-    //appTitle.setColour(juce::Label::textColourId, juce::Colours::yellow);
     appTitle.setColour(juce::Label::textColourId, juce::Colour(0xFF30cdca));
     appTitle.setJustificationType(juce::Justification::horizontallyCentred);
     addAndMakeVisible(appTitle);
 
+    //attach the ABLook visual style
     setLookAndFeel(&ABLook);
 
     setSize(1280, 720);
@@ -43,5 +44,24 @@ void MainComponent::resized()
 
     DBG("the appTitle's bounds are " << appTitle.getBounds().toString());
     appTitle.toFront(false);
+}
 
+void MainComponent::exerciseOpener(int exerciseNum) {
+    appTitle.setVisible(false);
+    exerciseSelector.setVisible(false);
+
+    switch (exerciseNum) {
+        case 1:
+            addAndMakeVisible(exercise1Page);
+            break;
+        case 2:
+            addAndMakeVisible(exercise2Page);
+            break;
+        case 3:
+            addAndMakeVisible(exercise3Page);
+            break;
+        case 4:
+            addAndMakeVisible(exercise4Page);
+            break;
+    }
 }
