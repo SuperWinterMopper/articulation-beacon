@@ -24,7 +24,14 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    //this function is implemented on the MainComponent to switch to corresponding exercise
+    std::function<void(int)> onSelectExercise;
+
 private:
+    static const std::size_t NUM_EXERCISES = 10;
+
+    std::array<juce::TextButton, NUM_EXERCISES> exerciseButtons;
+        
     juce::TextButton exercise1Button;
     juce::TextButton exercise2Button;
     juce::TextButton exercise3Button;

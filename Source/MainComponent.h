@@ -2,6 +2,10 @@
 
 #include <JuceHeader.h>
 #include "ExerciseSelector.h"
+#include "Exercise1.h"
+#include "Exercise2.h"
+#include "Exercise3.h"
+#include "Exercise4.h"
 
 class ABLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -69,7 +73,16 @@ private:
     //design of app overall is defined here
     ABLookAndFeel ABLook;
 
+    //Button selector
     ExerciseSelector exerciseSelector;
+
+    //Actual pages that will be opened for each exercise
+    Exercise1 exercise1Page;
+    Exercise1 exercise2Page;
+    Exercise1 exercise3Page;
+    Exercise1 exercise4Page;
+
+    //"ARTICULATION BEACON" logo
     juce::Label appTitle;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
