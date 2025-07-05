@@ -70,20 +70,25 @@ public:
     void resized() override;
 
 private:
+    //Actual pages that will be opened for each exercise
+    Exercise1 exercise1Page;
+    Exercise2 exercise2Page;
+    Exercise3 exercise3Page;
+    Exercise4 exercise4Page;
+
+    //"ARTICULATION BEACON" logo
+    juce::Label appTitle;
+
     //design of app overall is defined here
     ABLookAndFeel ABLook;
 
     //Button selector
     ExerciseSelector exerciseSelector;
 
-    //Actual pages that will be opened for each exercise
-    Exercise1 exercise1Page;
-    Exercise1 exercise2Page;
-    Exercise1 exercise3Page;
-    Exercise1 exercise4Page;
+    std::unique_ptr<juce::FileLogger> fileLogger;
 
-    //"ARTICULATION BEACON" logo
-    juce::Label appTitle;
+    //Sets up logger at the application Data Directory (Appdata/Roaming/ for Windows, Library/Application Support/ for Mac
+    void setUpLogger();
 
     void exerciseOpener(int exerciseNum);
 

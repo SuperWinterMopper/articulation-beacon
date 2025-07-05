@@ -58,9 +58,6 @@ private:
     //Hooks up audio file to the transportSource
     void setUpAudioFile();
 
-    //Sets up logger at the application Data Directory (Appdata/Roaming/ for Windows, Library/Application Support/ for Mac
-    void setUpLogger();
-
     juce::TextButton playButton, stopButton;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;

@@ -61,16 +61,12 @@ Exercise1::Exercise1() : state(Stopped)
     //this will hook up transportSource to the right audio file
     setUpAudioFile();
 
-    // Set up file logging
-    setUpLogger();
 }
 
 Exercise1::~Exercise1()
 {
     // This shuts down the audio device and clears the audio source.
     shutdownAudio();
-    juce::Logger::setCurrentLogger(nullptr);
-
 }
 
 //==============================================================================
@@ -156,7 +152,6 @@ void Exercise1::stopButtonClicked()
 void Exercise1::changeState(TransportState newState)
 {
     if (newState != state) {
-        DBG("changeState called!!!!!");
         juce::Logger::writeToLog("changeState called!!!!");
 
         state = newState;
@@ -223,20 +218,4 @@ void Exercise1::setUpAudioFile()
     else {
         DBG("test7 is not a valid file!!");
     }
-}
-
-void Exercise1::setUpLogger()
-{
-    // Set up file logging
-    auto logFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-        .getChildFile("Articulation Beacon").getChildFile("Articulation Beacon.log");
-
-    // Create directory if it doesn't exist
-    logFile.getParentDirectory().createDirectory();
-
-    fileLogger = std::make_unique<juce::FileLogger>(logFile, "Articulation Beacon started");
-    juce::Logger::setCurrentLogger(fileLogger.get());
-
-    if (juce::Logger::getCurrentLogger() != nullptr)
-        juce::Logger::writeToLog("App initialization log.");
 }

@@ -3,17 +3,20 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
-    exerciseSelector.onSelectExercise = [this] (int i) {exerciseOpener(i); };
-    addAndMakeVisible(exerciseSelector);
-    
     appTitle.setFont(juce::Font(70.0f, juce::Font::bold));
     appTitle.setText("ARTICULATION BEACON", juce::dontSendNotification);
     appTitle.setColour(juce::Label::textColourId, juce::Colour(0xFF30cdca));
     appTitle.setJustificationType(juce::Justification::horizontallyCentred);
     addAndMakeVisible(appTitle);
 
+    exerciseSelector.onSelectExercise = [this] (int i) {exerciseOpener(i); };
+    addAndMakeVisible(exerciseSelector);
+
     //attach the ABLook visual style
     setLookAndFeel(&ABLook);
+
+    // Set up file logging
+    setUpLogger();
 
     setSize(1280, 720);
 }
@@ -21,6 +24,7 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
     setLookAndFeel(nullptr);
+    juce::Logger::setCurrentLogger(nullptr);
 }
 
 //==============================================================================
@@ -64,4 +68,20 @@ void MainComponent::exerciseOpener(int exerciseNum) {
             addAndMakeVisible(exercise4Page);
             break;
     }
+}
+
+void MainComponent::setUpLogger()
+{
+    // Set up file logging
+    auto logFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+        .getChildFile("Articulation Beacon").getChildFile("Articulation Beacon.log");
+
+    // Create directory if it doesn't exist
+    logFile.getParentDirectory().createDirectory();
+
+    fileLogger = std::make_unique<juce::FileLogger>(logFile, "Articulation Beacon started");
+    juce::Logger::setCurrentLogger(fileLogger.get());
+
+    if (juce::Logger::getCurrentLogger() != nullptr)
+        juce::Logger::writeToLog("App initialization log.");
 }
