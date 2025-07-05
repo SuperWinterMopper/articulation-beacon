@@ -18,11 +18,16 @@ private:
     //note each button is a square so height = width
     const int buttonWidth = 40;
 
+    juce::Colour buttonNormalColor  = juce::Colour(0xF030cdca);
+    juce::Colour buttonOverColor    = juce::Colour(0xF630cdca);
+    juce::Colour buttonDownColor    = juce::Colour(0xFF30cdca);
+                                    
+
     juce::DrawableButton homeButton{ "Home", juce::DrawableButton::ImageOnButtonBackground };
     juce::DrawableButton prevButton{ "Previous", juce::DrawableButton::ImageOnButtonBackground };
-    juce::ShapeButton playButton{ "Play", juce::Colours::blue, juce::Colours::lightblue, juce::Colours::darkblue };
-    juce::ShapeButton skipButton{ "Skip", juce::Colours::blue, juce::Colours::lightblue, juce::Colours::darkblue };
-    juce::ShapeButton settingsButton{ "Settings", juce::Colours::blue, juce::Colours::lightblue, juce::Colours::darkblue };
+    juce::DrawableButton playButton{ "Play", juce::DrawableButton::ImageOnButtonBackground };
+    juce::DrawableButton skipButton{ "Skip", juce::DrawableButton::ImageOnButtonBackground };
+    juce::ShapeButton settingsButton{"Settings", buttonNormalColor, buttonOverColor, buttonDownColor };
 
     void Navbar::configureHomeButton();
     void Navbar::configurePrevButton();

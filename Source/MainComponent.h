@@ -90,7 +90,7 @@ private:
     //Sets up logger at the application Data Directory (Appdata/Roaming/ for Windows, Library/Application Support/ for Mac
     void setUpLogger();
 
-    void exerciseOpener(int exerciseNum);
+    void viewOpener(int exerciseNum);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

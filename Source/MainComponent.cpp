@@ -9,7 +9,7 @@ MainComponent::MainComponent()
     appTitle.setJustificationType(juce::Justification::horizontallyCentred);
     addAndMakeVisible(appTitle);
 
-    exerciseSelector.onSelectExercise = [this] (int i) {exerciseOpener(i); };
+    exerciseSelector.onSelectExercise = [this] (int i) {viewOpener(i); };
     addAndMakeVisible(exerciseSelector);
 
     //attach the ABLook visual style
@@ -42,31 +42,40 @@ void MainComponent::resized()
     int exerciseSelectXPadding = 200;
     int exerciseSelectYPadding = 300;
 
-    //appTitle.setBounds(15, 15, 500, 500);
     appTitle.setBounds(titleXPadding, titleYPadding, appTitle.getFont().getStringWidth(appTitle.getText()), appTitle.getFont().getHeight());
     exerciseSelector.setBounds(exerciseSelectXPadding, exerciseSelectYPadding, getWidth() - 2 * exerciseSelectXPadding, getHeight());
 
-    DBG("the appTitle's bounds are " << appTitle.getBounds().toString());
     appTitle.toFront(false);
 }
 
-void MainComponent::exerciseOpener(int exerciseNum) {
-    appTitle.setVisible(false);
-    exerciseSelector.setVisible(false);
+void MainComponent::viewOpener(int viewNum) {
 
-    switch (exerciseNum) {
-        case 1:
-            addAndMakeVisible(exercise1Page);
-            break;
-        case 2:
-            addAndMakeVisible(exercise2Page);
-            break;
-        case 3:
-            addAndMakeVisible(exercise3Page);
-            break;
-        case 4:
-            addAndMakeVisible(exercise4Page);
-            break;
+    // viewNum == 0 corresponds to back to home screen button
+    if (viewNum == 0) {
+        appTitle.setVisible(true);
+        exerciseSelector.setVisible(true);
+    }
+    //otherwise we're selecting an exercise
+    else {
+        appTitle.setVisible(false);
+        exerciseSelector.setVisible(false);
+
+        switch (viewNum) {
+            case 1:
+                exercise1Page.setBounds(getLocalBounds());
+                addAndMakeVisible(exercise1Page);
+                break;
+            case 2:
+                exercise2Page.setBounds(getLocalBounds());
+                addAndMakeVisible(exercise2Page);
+                break;
+            case 3:
+                addAndMakeVisible(exercise3Page);
+                break;
+            case 4:
+                addAndMakeVisible(exercise4Page);
+                break;
+        }
     }
 }
 
