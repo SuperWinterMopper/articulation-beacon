@@ -50,6 +50,10 @@ void MainComponent::resized()
     exerciseSelector.setBounds(exerciseSelectXPadding, exerciseSelectYPadding, getWidth() - 2 * exerciseSelectXPadding, getHeight());
 
     appTitle.toFront(false);
+    exercise1Page.setBounds(getLocalBounds());
+    exercise2Page.setBounds(getLocalBounds());
+    exercise3Page.setBounds(getLocalBounds());
+    exercise4Page.setBounds(getLocalBounds());
 }
 
 //Handles logic for switching views. Note that viewSwitch assumes all components in ViewOptions have already been attached to MainComponent
@@ -61,29 +65,43 @@ void MainComponent::viewSwitch(ViewOptions newView) {
         case ViewOptions::HOME:
             appTitle.setVisible(false);
             exerciseSelector.setVisible(false);
+            break;
         case ViewOptions::EX1:
             exercise1Page.setVisible(false);
+            break;
         case ViewOptions::EX2:
             exercise2Page.setVisible(false);
+            break;
         case ViewOptions::EX3:
             exercise3Page.setVisible(false);
+            break;
         case ViewOptions::EX4:
             exercise4Page.setVisible(false);
+            break;
     }
 
     //set the newView to visible, completing the view switch
     switch (newView) {
         case ViewOptions::HOME:
-            appTitle.setVisible(false);
-            exerciseSelector.setVisible(false);
+            appTitle.setVisible(true);
+            exerciseSelector.setVisible(true);
+            break;
         case ViewOptions::EX1:
-            exercise1Page.setVisible(false);
+            exercise1Page.setBounds(getLocalBounds());
+            exercise1Page.setVisible(true);
+            break;
         case ViewOptions::EX2:
-            exercise2Page.setVisible(false);
+            exercise2Page.setBounds(getLocalBounds());
+            exercise2Page.setVisible(true);
+            break;
         case ViewOptions::EX3:
-            exercise3Page.setVisible(false);
+            exercise3Page.setBounds(getLocalBounds());
+            exercise3Page.setVisible(true);
+            break;
         case ViewOptions::EX4:
-            exercise4Page.setVisible(false);
+            exercise4Page.setBounds(getLocalBounds());
+            exercise4Page.setVisible(true);
+            break;
     }
 
     //set the current view officially to newView
@@ -93,11 +111,6 @@ void MainComponent::viewSwitch(ViewOptions newView) {
 }
 
 void MainComponent::setUpExerciseComponents() {
-    exercise1Page.setBounds(getLocalBounds());
-    exercise2Page.setBounds(getLocalBounds());
-    exercise3Page.setBounds(getLocalBounds());
-    exercise4Page.setBounds(getLocalBounds());
-
     addChildComponent(exercise1Page);
     addChildComponent(exercise2Page);
     addChildComponent(exercise3Page);
