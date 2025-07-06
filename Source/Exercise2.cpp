@@ -32,4 +32,5 @@ void Exercise2::resized()
 
     navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
 
+
 }
