@@ -9,6 +9,7 @@ ExerciseSelector::ExerciseSelector()
         addAndMakeVisible(exerciseButton);
         exerciseButton.setButtonText("Exercise " + juce::String(i + 1));
     }
+
     exerciseButtons[0].onClick = [this] { if (onSelectExercise) onSelectExercise(ViewOptions::EX1); };
     exerciseButtons[1].onClick = [this] { if (onSelectExercise) onSelectExercise(ViewOptions::EX2); };
     exerciseButtons[2].onClick = [this] { if (onSelectExercise) onSelectExercise(ViewOptions::EX3); };
@@ -19,6 +20,7 @@ ExerciseSelector::ExerciseSelector()
 
 ExerciseSelector::~ExerciseSelector()
 {
+
 }
 
 void ExerciseSelector::paint (juce::Graphics& g)

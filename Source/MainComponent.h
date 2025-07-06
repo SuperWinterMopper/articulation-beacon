@@ -70,35 +70,37 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
 
-    //expose all exercises
-    std::array<std::unique_ptr<juce::Component>, NUM_EXERCISES> exercises;
-
-    void viewSwitch(juce::Component* newView);
-
-    juce::Component* curView;
-
 private:
+
+    //"ARTICULATION BEACON" logo
+    juce::Label appTitle;
+
+    //INVARIANT: curView is the current view of the app
+    ViewOptions curView = ViewOptions::HOME;
+
+    std::unique_ptr<juce::FileLogger> fileLogger;
+
     //Actual pages that will be opened for each exercise
     Exercise1 exercise1Page;
     Exercise2 exercise2Page;
     Exercise3 exercise3Page;
     Exercise4 exercise4Page;
 
-    //"ARTICULATION BEACON" logo
-    juce::Label appTitle;
+    //Button selector
+    ExerciseSelector exerciseSelector;
+
 
     //design of app overall is defined here
     ABLookAndFeel ABLook;
 
-    //Button selector
-    ExerciseSelector exerciseSelector;
-
-    std::unique_ptr<juce::FileLogger> fileLogger;
-
     //Sets up logger at the application Data Directory (Appdata/Roaming/ for Windows, Library/Application Support/ for Mac
     void setUpLogger();
 
-    void viewOpener(int exerciseNum);
+    //Handles view switching logic
+    void viewSwitch(ViewOptions newView);
+
+    //attaches all the exercise components initially (required for viewSwitch to work)
+    void setUpExerciseComponents();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

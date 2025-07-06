@@ -3,13 +3,17 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
+    //attach, but not display exercise components
+    setUpExerciseComponents();
+
     appTitle.setFont(juce::Font(70.0f, juce::Font::bold));
     appTitle.setText("ARTICULATION BEACON", juce::dontSendNotification);
     appTitle.setColour(juce::Label::textColourId, juce::Colour(0xFF30cdca));
     appTitle.setJustificationType(juce::Justification::horizontallyCentred);
     addAndMakeVisible(appTitle);
 
-    exerciseSelector.onSelectExercise = [this] (int i) {viewOpener(i); };
+    //add exerciseSelector and set connect it's button switch to viewSwitch function in MainComponent
+    exerciseSelector.onSelectExercise = [this] (ViewOptions newView) { viewSwitch(newView); };
     addAndMakeVisible(exerciseSelector);
 
     //attach the ABLook visual style
@@ -48,30 +52,60 @@ void MainComponent::resized()
     appTitle.toFront(false);
 }
 
-void MainComponent::viewSwitch(juce::Component* newView) {
+//Handles logic for switching views. Note that viewSwitch assumes all components in ViewOptions have already been attached to MainComponent
+void MainComponent::viewSwitch(ViewOptions newView) {
+    if (newView == curView) return;
 
+    //set the curView to invisible to switch to the newView
+    switch (curView) {
+        case ViewOptions::HOME:
+            appTitle.setVisible(false);
+            exerciseSelector.setVisible(false);
+        case ViewOptions::EX1:
+            exercise1Page.setVisible(false);
+        case ViewOptions::EX2:
+            exercise2Page.setVisible(false);
+        case ViewOptions::EX3:
+            exercise3Page.setVisible(false);
+        case ViewOptions::EX4:
+            exercise4Page.setVisible(false);
+    }
 
-    if (curView == newView) return;
+    //set the newView to visible, completing the view switch
+    switch (newView) {
+        case ViewOptions::HOME:
+            appTitle.setVisible(false);
+            exerciseSelector.setVisible(false);
+        case ViewOptions::EX1:
+            exercise1Page.setVisible(false);
+        case ViewOptions::EX2:
+            exercise2Page.setVisible(false);
+        case ViewOptions::EX3:
+            exercise3Page.setVisible(false);
+        case ViewOptions::EX4:
+            exercise4Page.setVisible(false);
+    }
 
-    if (curView != nullptr)
-        curView->setVisible(false);   // hide old
-
+    //set the current view officially to newView
     curView = newView;
 
-    //this means it's the first time attaching this component
-    if (curView->getParentComponent() == nullptr)
-        addAndMakeVisible(curView);   
-    else
-        curView->setVisible(true);
-
-    resized();                        // keep layout right
+    resized(); // keep layout right  
 }
 
-void MainComponent::setUpLogger()
-{
-    // Set up file logging
-    auto logFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-        .getChildFile("Articulation Beacon").getChildFile("Articulation Beacon.log");
+void MainComponent::setUpExerciseComponents() {
+    exercise1Page.setBounds(getLocalBounds());
+    exercise2Page.setBounds(getLocalBounds());
+    exercise3Page.setBounds(getLocalBounds());
+    exercise4Page.setBounds(getLocalBounds());
+
+    addChildComponent(exercise1Page);
+    addChildComponent(exercise2Page);
+    addChildComponent(exercise3Page);
+    addChildComponent(exercise4Page);
+}
+
+void MainComponent::setUpLogger() {
+    auto logFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("Articulation Beacon").getChildFile("Articulation Beacon.log");
 
     // Create directory if it doesn't exist
     logFile.getParentDirectory().createDirectory();
