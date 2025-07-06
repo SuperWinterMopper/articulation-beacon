@@ -48,35 +48,23 @@ void MainComponent::resized()
     appTitle.toFront(false);
 }
 
-void MainComponent::viewOpener(int viewNum) {
+void MainComponent::viewSwitch(juce::Component* newView) {
 
-    // viewNum == 0 corresponds to back to home screen button
-    if (viewNum == 0) {
-        appTitle.setVisible(true);
-        exerciseSelector.setVisible(true);
-    }
-    //otherwise we're selecting an exercise
-    else {
-        appTitle.setVisible(false);
-        exerciseSelector.setVisible(false);
 
-        switch (viewNum) {
-            case 1:
-                exercise1Page.setBounds(getLocalBounds());
-                addAndMakeVisible(exercise1Page);
-                break;
-            case 2:
-                exercise2Page.setBounds(getLocalBounds());
-                addAndMakeVisible(exercise2Page);
-                break;
-            case 3:
-                addAndMakeVisible(exercise3Page);
-                break;
-            case 4:
-                addAndMakeVisible(exercise4Page);
-                break;
-        }
-    }
+    if (curView == newView) return;
+
+    if (curView != nullptr)
+        curView->setVisible(false);   // hide old
+
+    curView = newView;
+
+    //this means it's the first time attaching this component
+    if (curView->getParentComponent() == nullptr)
+        addAndMakeVisible(curView);   
+    else
+        curView->setVisible(true);
+
+    resized();                        // keep layout right
 }
 
 void MainComponent::setUpLogger()

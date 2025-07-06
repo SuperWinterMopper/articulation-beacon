@@ -43,13 +43,6 @@ void Navbar::resized()
     settingsButton.setBounds(XForCenterButton + 2 * buttonSpacing + 2 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
 }
 
-//helper function to load SVG
-static std::unique_ptr<juce::Drawable> loadSVG(const juce::File& file)
-{
-    std::unique_ptr<juce::XmlElement> svg(juce::XmlDocument::parse(file));
-    return svg ? juce::Drawable::createFromSVG(*svg) : nullptr;
-}
-
 void Navbar::configureHomeButton()
 {
     static const unsigned char pathData[] = { 110,109,0,0,192,64,0,0,32,65,108,0,0,8,66,0,0,32,65,108,0,0,8,66,0,0,32,65,108,91,102,8,66,61,10,32,65,108,117,204,8,66,237,40,32,65,108,13,50,9,66,253,91,32,65,108,224,150,9,66,75,163,32,65,108,175,250,9,66,171,254,32,65,108,58,93,10,66,226,109,33,65,
@@ -106,6 +99,9 @@ void Navbar::configureHomeButton()
     path.loadPathFromData(pathData, sizeof(pathData));
 
     homeButton.setShape(path, true, true, true);
+
+    //button calls `homeButtonClick()` when clicked. This is implemented by the MainComponent
+    homeButton.onClick = [this] { if (homeButtonClick) homeButtonClick(); };
 }
 
 void Navbar::configurePrevButton()

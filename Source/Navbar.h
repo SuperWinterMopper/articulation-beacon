@@ -14,6 +14,9 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    //this function is implemented on the MainComponent to switch to corresponding exercise
+    std::function<void()> homeButtonClick;
+
 private:
     //note each button is a square so height = width
     const int buttonWidth = 40;

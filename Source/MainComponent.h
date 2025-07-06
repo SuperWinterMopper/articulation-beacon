@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Constants.h"
 #include "ExerciseSelector.h"
 #include "Exercise1.h"
 #include "Exercise2.h"
@@ -68,6 +69,13 @@ public:
 
     void paint (juce::Graphics& g) override;
     void resized() override;
+
+    //expose all exercises
+    std::array<std::unique_ptr<juce::Component>, NUM_EXERCISES> exercises;
+
+    void viewSwitch(juce::Component* newView);
+
+    juce::Component* curView;
 
 private:
     //Actual pages that will be opened for each exercise
