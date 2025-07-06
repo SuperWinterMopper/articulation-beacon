@@ -89,7 +89,6 @@ private:
     //Button selector
     ExerciseSelector exerciseSelector;
 
-
     //design of app overall is defined here
     ABLookAndFeel ABLook;
 
