@@ -50,10 +50,6 @@ void MainComponent::resized()
     exerciseSelector.setBounds(exerciseSelectXPadding, exerciseSelectYPadding, getWidth() - 2 * exerciseSelectXPadding, getHeight());
 
     appTitle.toFront(false);
-    exercise1Page.setBounds(getLocalBounds());
-    exercise2Page.setBounds(getLocalBounds());
-    exercise3Page.setBounds(getLocalBounds());
-    exercise4Page.setBounds(getLocalBounds());
 }
 
 //Handles logic for switching views. Note that viewSwitch assumes all components in ViewOptions have already been attached to MainComponent
@@ -67,16 +63,16 @@ void MainComponent::viewSwitch(ViewOptions newView) {
             exerciseSelector.setVisible(false);
             break;
         case ViewOptions::EX1:
-            exercise1Page.setVisible(false);
+            exercisesArray[0].setVisible(false);
             break;
         case ViewOptions::EX2:
-            exercise2Page.setVisible(false);
+            exercisesArray[1].setVisible(false);
             break;
         case ViewOptions::EX3:
-            exercise3Page.setVisible(false);
+            exercisesArray[2].setVisible(false);
             break;
         case ViewOptions::EX4:
-            exercise4Page.setVisible(false);
+            exercisesArray[3].setVisible(false);
             break;
     }
 
@@ -87,20 +83,20 @@ void MainComponent::viewSwitch(ViewOptions newView) {
             exerciseSelector.setVisible(true);
             break;
         case ViewOptions::EX1:
-            exercise1Page.setBounds(getLocalBounds());
-            exercise1Page.setVisible(true);
+            exercisesArray[0].setBounds(getLocalBounds());
+            exercisesArray[0].setVisible(true);
             break;
         case ViewOptions::EX2:
-            exercise2Page.setBounds(getLocalBounds());
-            exercise2Page.setVisible(true);
+            exercisesArray[1].setBounds(getLocalBounds());
+            exercisesArray[1].setVisible(true);
             break;
         case ViewOptions::EX3:
-            exercise3Page.setBounds(getLocalBounds());
-            exercise3Page.setVisible(true);
+            exercisesArray[2].setBounds(getLocalBounds());
+            exercisesArray[2].setVisible(true);
             break;
         case ViewOptions::EX4:
-            exercise4Page.setBounds(getLocalBounds());
-            exercise4Page.setVisible(true);
+            exercisesArray[3].setBounds(getLocalBounds());
+            exercisesArray[3].setVisible(true);
             break;
     }
 
@@ -114,6 +110,13 @@ void MainComponent::setUpExerciseComponents() {
 
     //this is called bad programming but it works and I can't be bothered for the scope of this project
     exercise2Page.homeButtonClick = [this]() { viewSwitch(ViewOptions::HOME); };
+
+    for (ExerciseComponent& exComp : exercisesArray)
+    {
+        //connect homeButtonClick to viewSwitch. not the greatest programming but for now it works
+        exComp.homeButtonClick = [this]() { viewSwitch(ViewOptions::HOME); };
+        addChildComponent(exComp);
+    }
 
     addChildComponent(exercise1Page);
     addChildComponent(exercise2Page);

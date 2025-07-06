@@ -1,22 +1,12 @@
-/*
-  ==============================================================================
-
-    ExerciseComponent.cpp
-    Created: 6 Jul 2025 12:51:07pm
-    Author:  afkhe
-
-  ==============================================================================
-*/
-
 #include <JuceHeader.h>
 #include "ExerciseComponent.h"
 
 //==============================================================================
 ExerciseComponent::ExerciseComponent()
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
-
+    //asks MainComponent to update go to home
+    navBar.homeButtonClick = [this]() { if (homeButtonClick) homeButtonClick(); };
+    addAndMakeVisible(navBar);
 }
 
 ExerciseComponent::~ExerciseComponent()
@@ -25,13 +15,6 @@ ExerciseComponent::~ExerciseComponent()
 
 void ExerciseComponent::paint (juce::Graphics& g)
 {
-    /* This demo code just fills the component's background and
-       draws some placeholder text to get you started.
-
-       You should replace everything in this method with your own
-       drawing code..
-    */
-
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
 
     g.setColour (juce::Colours::grey);
@@ -45,7 +28,7 @@ void ExerciseComponent::paint (juce::Graphics& g)
 
 void ExerciseComponent::resized()
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
+    const int navBarHeight = 100;
 
+    navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
 }

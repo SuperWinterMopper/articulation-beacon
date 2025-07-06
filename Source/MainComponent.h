@@ -7,6 +7,7 @@
 #include "Exercise2.h"
 #include "Exercise3.h"
 #include "Exercise4.h"
+#include "ExerciseComponent.h"
 
 class ABLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -85,6 +86,8 @@ private:
     Exercise2 exercise2Page;
     Exercise3 exercise3Page;
     Exercise4 exercise4Page;
+
+    std::array<ExerciseComponent, NUM_EXERCISES> exercisesArray;
 
     //Button selector
     ExerciseSelector exerciseSelector;
