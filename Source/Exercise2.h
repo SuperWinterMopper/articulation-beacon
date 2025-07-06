@@ -13,6 +13,8 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    //this function is called by the home button to get back to home screen
+    std::function<void()> homeButtonClick;
 private:
     Navbar navBar;
 

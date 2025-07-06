@@ -111,6 +111,10 @@ void MainComponent::viewSwitch(ViewOptions newView) {
 }
 
 void MainComponent::setUpExerciseComponents() {
+
+    //this is called bad programming but it works and I can't be bothered for the scope of this project
+    exercise2Page.homeButtonClick = [this]() { viewSwitch(ViewOptions::HOME); };
+
     addChildComponent(exercise1Page);
     addChildComponent(exercise2Page);
     addChildComponent(exercise3Page);

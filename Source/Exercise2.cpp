@@ -4,8 +4,9 @@
 //==============================================================================
 Exercise2::Exercise2()
 {
+    //asks MainComponent to update go to home
+    navBar.homeButtonClick = [this]() { if(homeButtonClick) homeButtonClick(); };
     addAndMakeVisible(navBar);
-
 }
 
 Exercise2::~Exercise2()
@@ -31,6 +32,4 @@ void Exercise2::resized()
     const int navBarHeight = 100;
 
     navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
-
-
 }
