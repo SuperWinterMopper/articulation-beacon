@@ -3,10 +3,6 @@
 #include <JuceHeader.h>
 #include "Constants.h"
 #include "ExerciseSelector.h"
-#include "Exercise1.h"
-#include "Exercise2.h"
-#include "Exercise3.h"
-#include "Exercise4.h"
 #include "ExerciseComponent.h"
 
 class ABLookAndFeel : public juce::LookAndFeel_V4
@@ -72,7 +68,6 @@ public:
     void resized() override;
 
 private:
-
     //"ARTICULATION BEACON" logo
     juce::Label appTitle;
 
@@ -81,13 +76,13 @@ private:
 
     std::unique_ptr<juce::FileLogger> fileLogger;
 
-    //Actual pages that will be opened for each exercise
-    Exercise1 exercise1Page;
-    Exercise2 exercise2Page;
-    Exercise3 exercise3Page;
-    Exercise4 exercise4Page;
-
-    std::array<ExerciseComponent, NUM_EXERCISES> exercisesArray;
+    //Array containing all the exercises
+    std::array<ExerciseComponent, NUM_EXERCISES> exercisesArray { {
+        {"this is first!!"},
+        {"this is secon!!"},
+        {"this is third!!"},
+        {"this is 4th!!"},
+    } };
 
     //Button selector
     ExerciseSelector exerciseSelector;

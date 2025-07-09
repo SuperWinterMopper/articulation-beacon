@@ -7,7 +7,7 @@
 class ExerciseComponent  : public juce::Component
 {
 public:
-    ExerciseComponent();
+    ExerciseComponent(std::string name);
     ~ExerciseComponent() override;
 
     void paint (juce::Graphics&) override;
@@ -18,6 +18,8 @@ public:
 
 private:
     Navbar navBar;
+
+    std::string this_name;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExerciseComponent)
 };

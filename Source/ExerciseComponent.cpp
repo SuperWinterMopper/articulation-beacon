@@ -2,11 +2,12 @@
 #include "ExerciseComponent.h"
 
 //==============================================================================
-ExerciseComponent::ExerciseComponent()
+ExerciseComponent::ExerciseComponent(std::string name)
 {
     //asks MainComponent to update go to home
     navBar.homeButtonClick = [this]() { if (homeButtonClick) homeButtonClick(); };
     addAndMakeVisible(navBar);
+    this_name = name;
 }
 
 ExerciseComponent::~ExerciseComponent()
@@ -22,7 +23,7 @@ void ExerciseComponent::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::white);
     g.setFont (juce::FontOptions (14.0f));
-    g.drawText ("ExerciseComponent", getLocalBounds(),
+    g.drawText (this_name, getLocalBounds(),
                 juce::Justification::centred, true);   // draw some placeholder text
 }
 

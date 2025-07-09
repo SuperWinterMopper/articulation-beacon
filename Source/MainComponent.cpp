@@ -108,20 +108,12 @@ void MainComponent::viewSwitch(ViewOptions newView) {
 
 void MainComponent::setUpExerciseComponents() {
 
-    //this is called bad programming but it works and I can't be bothered for the scope of this project
-    exercise2Page.homeButtonClick = [this]() { viewSwitch(ViewOptions::HOME); };
-
     for (ExerciseComponent& exComp : exercisesArray)
     {
         //connect homeButtonClick to viewSwitch. not the greatest programming but for now it works
         exComp.homeButtonClick = [this]() { viewSwitch(ViewOptions::HOME); };
         addChildComponent(exComp);
     }
-
-    addChildComponent(exercise1Page);
-    addChildComponent(exercise2Page);
-    addChildComponent(exercise3Page);
-    addChildComponent(exercise4Page);
 }
 
 void MainComponent::setUpLogger() {

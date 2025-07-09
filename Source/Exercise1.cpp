@@ -36,7 +36,6 @@ Exercise1::Exercise1() : state(Stopped)
     // you add any child components.
     setSize(800, 600);
 
-
     //Set audio channels
     //==============================================================================
     //int numOutputChannels = getNumOutputChannels();
