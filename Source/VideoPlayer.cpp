@@ -2,25 +2,30 @@
 #include "VideoPlayer.h"
 
 //==============================================================================
-VideoPlayer::VideoPlayer()
+VideoPlayer::VideoPlayer(juce::String path) 
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
+    setFileLocation(path);
+    
+    if (auto r = video.load(file_location); r.wasOk())
+        video.play();
+    else {
+        juce::String error_message = "Video load failed for file at location " + file_location.getFullPathName() + ", " + r.getErrorMessage();
+        juce::Logger::writeToLog(error_message);
+        DBG(error_message);
+    }
 
+    addAndMakeVisible(video);
+    setSize(640, 360);
 }
 
 VideoPlayer::~VideoPlayer()
 {
+    
 }
+
 
 void VideoPlayer::paint (juce::Graphics& g)
 {
-    /* This demo code just fills the component's background and
-       draws some placeholder text to get you started.
-
-       You should replace everything in this method with your own
-       drawing code..
-    */
 
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
 
@@ -35,7 +40,10 @@ void VideoPlayer::paint (juce::Graphics& g)
 
 void VideoPlayer::resized()
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
+    video.setBounds(getLocalBounds());
+}
 
+void VideoPlayer::setFileLocation(juce::String path) 
+{
+    file_location = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory().getChildFile(path);
 }

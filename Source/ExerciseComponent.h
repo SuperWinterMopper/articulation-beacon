@@ -2,12 +2,13 @@
 
 #include <JuceHeader.h>
 #include "Navbar.h"
+#include "VideoPlayer.h"
 
 //==============================================================================
 class ExerciseComponent  : public juce::Component
 {
 public:
-    ExerciseComponent(std::string name);
+    ExerciseComponent(juce::String videosPath);
     ~ExerciseComponent() override;
 
     void paint (juce::Graphics&) override;
@@ -17,9 +18,9 @@ public:
     std::function<void()> homeButtonClick;
 
 private:
+    juce::String videosPath;
+    VideoPlayer videoPlayer{ "temp" };
     Navbar navBar;
-
-    std::string this_name;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExerciseComponent)
 };

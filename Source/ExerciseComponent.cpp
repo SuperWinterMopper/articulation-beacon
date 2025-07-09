@@ -2,12 +2,14 @@
 #include "ExerciseComponent.h"
 
 //==============================================================================
-ExerciseComponent::ExerciseComponent(std::string name)
+ExerciseComponent::ExerciseComponent(juce::String videosPath) : videosPath(videosPath)
+                                                                
 {
     //asks MainComponent to update go to home
+    videoPlayer.setFileLocation(videosPath);
     navBar.homeButtonClick = [this]() { if (homeButtonClick) homeButtonClick(); };
+    addAndMakeVisible(videoPlayer);
     addAndMakeVisible(navBar);
-    this_name = name;
 }
 
 ExerciseComponent::~ExerciseComponent()
@@ -17,14 +19,6 @@ ExerciseComponent::~ExerciseComponent()
 void ExerciseComponent::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
-
-    g.setColour (juce::Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
-    g.setColour (juce::Colours::white);
-    g.setFont (juce::FontOptions (14.0f));
-    g.drawText (this_name, getLocalBounds(),
-                juce::Justification::centred, true);   // draw some placeholder text
 }
 
 void ExerciseComponent::resized()
