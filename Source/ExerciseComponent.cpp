@@ -2,10 +2,11 @@
 #include "ExerciseComponent.h"
 
 //==============================================================================
-ExerciseComponent::ExerciseComponent(juce::String videosPath) : videosPath(videosPath)
+ExerciseComponent::ExerciseComponent(juce::String videosPath) : videosPath(videosPath), videoPlayer{ videosPath }
                                                                 
 {
     //asks MainComponent to update go to home
+    DBG("the videoPath for this ExerciseComponent right before videoPlayer.setFileLocation(videosPath); is " << videosPath);
     videoPlayer.setFileLocation(videosPath);
     navBar.homeButtonClick = [this]() { if (homeButtonClick) homeButtonClick(); };
     addAndMakeVisible(videoPlayer);
@@ -14,6 +15,7 @@ ExerciseComponent::ExerciseComponent(juce::String videosPath) : videosPath(video
 
 ExerciseComponent::~ExerciseComponent()
 {
+
 }
 
 void ExerciseComponent::paint (juce::Graphics& g)

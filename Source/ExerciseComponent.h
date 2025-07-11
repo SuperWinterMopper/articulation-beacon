@@ -19,7 +19,7 @@ public:
 
 private:
     juce::String videosPath;
-    VideoPlayer videoPlayer{ "temp" };
+    VideoPlayer videoPlayer;
     Navbar navBar;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExerciseComponent)

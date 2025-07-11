@@ -5,6 +5,12 @@
 #include "ExerciseSelector.h"
 #include "ExerciseComponent.h"
 
+#if JUCE_WINDOWS
+    #include <windows.h>
+    #include <comdef.h>  
+#endif
+
+
 class ABLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
@@ -74,15 +80,19 @@ private:
     //INVARIANT: curView is the current view of the app
     ViewOptions curView = ViewOptions::HOME;
 
-    std::unique_ptr<juce::FileLogger> fileLogger;
-
     //Array containing all the exercises
     std::array<ExerciseComponent, NUM_EXERCISES> exercisesArray { {
-        {"this is first!!"},
-        {"this is secon!!"},
-        {"this is third!!"},
-        {"this is 4th!!"},
+        {"Resources/Videos/Exercise_2/line_1.mp4"},
+        {"Resources/Videos/Exercise_2/line_1.mp4"},
+        {"Resources/Videos/Exercise_2/line_1.mp4"},
+        {"Resources/Videos/Exercise_2/line_1.mp4"},
     } };
+
+    std::unique_ptr<juce::FileLogger> fileLogger; 
+
+    #if JUCE_WINDOWS
+        bool comInitialized = false;
+    #endif
 
     //Button selector
     ExerciseSelector exerciseSelector;
@@ -98,6 +108,9 @@ private:
 
     //attaches all the exercise components initially (required for viewSwitch to work)
     void setUpExerciseComponents();
+
+    //sets up COM for Windows devices 
+    void initializeCOM();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

@@ -6,6 +6,8 @@ MainComponent::MainComponent()
     //attach, but not display exercise components
     setUpExerciseComponents();
 
+    initializeCOM();
+
     appTitle.setFont(juce::Font(70.0f, juce::Font::bold));
     appTitle.setText("ARTICULATION BEACON", juce::dontSendNotification);
     appTitle.setColour(juce::Label::textColourId, juce::Colour(0xFF30cdca));
@@ -29,6 +31,13 @@ MainComponent::~MainComponent()
 {
     setLookAndFeel(nullptr);
     juce::Logger::setCurrentLogger(nullptr);
+    #if JUCE_WINDOWS
+        if (comInitialized)
+        {
+            CoUninitialize();
+            comInitialized = false;
+        }
+    #endif
 }
 
 //==============================================================================
@@ -127,4 +136,19 @@ void MainComponent::setUpLogger() {
 
     if (juce::Logger::getCurrentLogger() != nullptr)
         juce::Logger::writeToLog("App initialization log.");
+}
+
+void MainComponent::initializeCOM() {
+    #if JUCE_WINDOWS
+        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        if (SUCCEEDED(hr))
+        {
+            comInitialized = true;
+        }
+        else
+        {
+            // Handle the error appropriately
+            juce::Logger::writeToLog("Failed to initialize COM");
+        }
+    #endif
 }
