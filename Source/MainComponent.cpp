@@ -63,6 +63,10 @@ void MainComponent::resized()
 
 //Handles logic for switching views. Note that viewSwitch assumes all components in ViewOptions have already been attached to MainComponent
 void MainComponent::viewSwitch(ViewOptions newView) {
+    DBG("CALLED viewSwitch");
+    DBG("CALLED viewSwitch");
+    DBG("CALLED viewSwitch");
+    DBG("CALLED viewSwitch");
     if (newView == curView) return;
 
     //set the curView to invisible to switch to the newView
