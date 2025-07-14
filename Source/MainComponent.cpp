@@ -8,6 +8,10 @@ MainComponent::MainComponent()
 
     initializeCOM();
 
+    static juce::Identifier viewOptionIdentifier("viewOption");
+    juce::ValueTree cur(viewOptionIdentifier);
+
+
     appTitle.setFont(juce::Font(70.0f, juce::Font::bold));
     appTitle.setText("ARTICULATION BEACON", juce::dontSendNotification);
     appTitle.setColour(juce::Label::textColourId, juce::Colour(0xFF30cdca));
@@ -63,9 +67,6 @@ void MainComponent::resized()
 
 //Handles logic for switching views. Note that viewSwitch assumes all components in ViewOptions have already been attached to MainComponent
 void MainComponent::viewSwitch(ViewOptions newView) {
-    DBG("CALLED viewSwitch");
-    DBG("CALLED viewSwitch");
-    DBG("CALLED viewSwitch");
     DBG("CALLED viewSwitch");
     if (newView == curView) return;
 

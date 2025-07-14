@@ -1,3 +1,5 @@
+#include <JuceHeader.h>
+
 #pragma once
 
 static const size_t NUM_EXERCISES = 4;
@@ -9,3 +11,5 @@ enum class ViewOptions {
 	EX3,
 	EX4
 };
+
+static juce::Identifier viewOptionIdentifier("viewOption");

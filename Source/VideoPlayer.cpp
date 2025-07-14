@@ -8,27 +8,7 @@ VideoPlayer::VideoPlayer(juce::String path)
     addAndMakeVisible(video);
     DBG("addAndMakeVisible(video); HAS BEEN CALLED");
     setSize(640, 360);
-    
-    //DBG("the file location is " << file_location.getFullPathName());
-
-    //if (file_location.existsAsFile()) {
-    //    DBG("the file location right before error is " << file_location.getFullPathName());
-    //    auto r = video.load(file_location);
-        //if (r.wasOk()) {
-        //    video.play();
-        //}
-        //else {
-        //    juce::String error_message = "Video load failed for file at location " + file_location.getFullPathName() + ", " + r.getErrorMessage();
-        //    juce::Logger::writeToLog(error_message);
-        //    DBG(error_message);
-        //}
-    //}
-    //else {
-    //    juce::String error_message = "Video file does not exist at location " + file_location.getFullPathName();
-    //    juce::Logger::writeToLog(error_message);
-    //    DBG(error_message);
-    //}
-
+    DBG("the file location is " << file_location.getFullPathName());
 }
 
 VideoPlayer::~VideoPlayer()
@@ -70,7 +50,7 @@ void VideoPlayer::setFileLocation(juce::String path)
 void VideoPlayer::parentHierarchyChanged() {
     Component::parentHierarchyChanged();
     DBG("CALLED parentHierarchyChanged");
-
+    DBG("isShowing is " << (isShowing() ? "true" : "false"));
     if (isShowing() && file_location.existsAsFile()) {
         loadVideoFile();
     }
