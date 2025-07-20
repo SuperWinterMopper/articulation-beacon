@@ -8,20 +8,19 @@
 class VideoPlayer  : public juce::Component
 {
 public:
-    VideoPlayer(juce::String file);
+    VideoPlayer();
     ~VideoPlayer() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
-    void parentHierarchyChanged() override;
 
-    void setFileLocation(juce::String path);
+    void setVideoPathAndLoad(juce::String path);
 
 private:
-    juce::File file_location;
+    juce::File filePath;
     juce::VideoComponent video{true};
+    juce::ValueTree viewState;
 
-    void loadVideoFile();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VideoPlayer)
 };

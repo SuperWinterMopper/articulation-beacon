@@ -12,4 +12,4 @@ enum class ViewOptions {
 	EX4
 };
 
-static juce::Identifier viewOptionIdentifier("viewOption");
+static juce::Identifier viewState("viewOption");

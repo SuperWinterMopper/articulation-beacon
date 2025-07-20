@@ -3,14 +3,12 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
+    curView.setProperty(viewState, static_cast<int>(ViewOptions::HOME), nullptr);
+
     //attach, but not display exercise components
     setUpExerciseComponents();
 
     initializeCOM();
-
-    static juce::Identifier viewOptionIdentifier("viewOption");
-    juce::ValueTree cur(viewOptionIdentifier);
-
 
     appTitle.setFont(juce::Font(70.0f, juce::Font::bold));
     appTitle.setText("ARTICULATION BEACON", juce::dontSendNotification);
@@ -66,12 +64,15 @@ void MainComponent::resized()
 }
 
 //Handles logic for switching views. Note that viewSwitch assumes all components in ViewOptions have already been attached to MainComponent
-void MainComponent::viewSwitch(ViewOptions newView) {
+void MainComponent::viewSwitch(ViewOptions newViewOption) {
     DBG("CALLED viewSwitch");
-    if (newView == curView) return;
+    ViewOptions curViewOption = static_cast<ViewOptions>((int)curView.getProperty(viewState));
+    //ViewOptions newViewOption = static_cast<ViewOptions>((int)newView.getProperty(viewState));
+
+    if (curViewOption == newViewOption) return;
 
     //set the curView to invisible to switch to the newView
-    switch (curView) {
+    switch (curViewOption) {
         case ViewOptions::HOME:
             appTitle.setVisible(false);
             exerciseSelector.setVisible(false);
@@ -91,7 +92,7 @@ void MainComponent::viewSwitch(ViewOptions newView) {
     }
 
     //set the newView to visible, completing the view switch
-    switch (newView) {
+    switch (newViewOption) {
         case ViewOptions::HOME:
             appTitle.setVisible(true);
             exerciseSelector.setVisible(true);
@@ -115,7 +116,8 @@ void MainComponent::viewSwitch(ViewOptions newView) {
     }
 
     //set the current view officially to newView
-    curView = newView;
+    DBG("setting valueTree curView to a new value, " << static_cast<int>(newViewOption));
+    curView.setProperty(viewState, static_cast<int>(newViewOption), nullptr);
 
     resized(); // keep layout right  
 }

@@ -2,13 +2,11 @@
 #include "VideoPlayer.h"
 
 //==============================================================================
-VideoPlayer::VideoPlayer(juce::String path) 
+VideoPlayer::VideoPlayer() 
 {
-    setFileLocation(path);
     addAndMakeVisible(video);
     DBG("addAndMakeVisible(video); HAS BEEN CALLED");
-    setSize(640, 360);
-    DBG("the file location is " << file_location.getFullPathName());
+    setSize(800, 800);
 }
 
 VideoPlayer::~VideoPlayer()
@@ -35,37 +33,27 @@ void VideoPlayer::resized()
     video.setBounds(getLocalBounds());
 }
 
-void VideoPlayer::setFileLocation(juce::String path) 
+void VideoPlayer::setVideoPathAndLoad(juce::String path)
 {
+    DBG("WILL EXECUTE VIDEO LOAD CODE");
+    path = "Resources/Videos/Exercise_2/line_1.mp4";
     juce::File newFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory().getChildFile(path);
-    if(newFile.existsAsFile())
-        file_location = newFile;
+    DBG("isShowing is " << (isShowing() ? "true" : "false"));
+
+    if (isShowing() && newFile.existsAsFile()) {
+        filePath = newFile;
+        DBG("LOADING VIDEO FILE" << filePath.getFullPathName());
+
+        auto r = video.load(filePath);
+        if (!r.wasOk())
+            DBG("Video load failed: " << r.getErrorMessage());
+        else
+            video.play();
+    }
     else {
         juce::String error_message = "Error when attempting to open video file " + newFile.getFullPathName();
         juce::Logger::writeToLog(error_message);
         DBG(error_message);
     }
-}
 
-void VideoPlayer::parentHierarchyChanged() {
-    Component::parentHierarchyChanged();
-    DBG("CALLED parentHierarchyChanged");
-    DBG("isShowing is " << (isShowing() ? "true" : "false"));
-    if (isShowing() && file_location.existsAsFile()) {
-        loadVideoFile();
-    }
-}
-
-//note this function assumes path is a valid file path to a video file
-void VideoPlayer::loadVideoFile() {
-    DBG("CALLED loadVideoFile");
-    auto r = video.load(file_location);
-    //if (r.wasOk()) {
-    //    video.play();
-    //}
-    //else {
-    //    juce::String error_message = "Video load failed: " + r.getErrorMessage();
-    //    juce::Logger::writeToLog(error_message);
-    //    DBG(error_message);
-    //}
 }

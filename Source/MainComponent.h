@@ -78,14 +78,14 @@ private:
     juce::Label appTitle;
 
     //INVARIANT: curView is the current view of the app
-    ViewOptions curView = ViewOptions::HOME;
+    juce::ValueTree curView {viewState};
 
     //Array containing all the exercises
     std::array<ExerciseComponent, NUM_EXERCISES> exercisesArray { {
-        {"Resources/Videos/Exercise_2/line_1.mp4"},
-        {"Resources/Videos/Exercise_2/line_1.mp4"},
-        {"Resources/Videos/Exercise_2/line_1.mp4"},
-        {"Resources/Videos/Exercise_2/line_1.mp4"},
+        {0, ViewOptions::EX1, curView},
+        {1, ViewOptions::EX2, curView},
+        {2, ViewOptions::EX3, curView},
+        {3, ViewOptions::EX4, curView},
     } };
 
     std::unique_ptr<juce::FileLogger> fileLogger; 
