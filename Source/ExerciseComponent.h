@@ -3,7 +3,7 @@
 #include <JuceHeader.h>
 #include "Navbar.h"
 #include "VideoPlayer.h"
-#include "Constants.h"
+#include "utils.h"
 
 //==============================================================================
 class ExerciseComponent : public juce::AudioAppComponent, private juce::ValueTree::Listener
@@ -18,7 +18,6 @@ public:
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
-
 
     //this function is called by the home button to get back to home screen
     std::function<void()> homeButtonClick;
@@ -36,9 +35,10 @@ private:
     //scoreState is a crucial ValueTree object that keeps track of the state of the application's metronome, video, DSP, etc
     juce::ValueTree scoreState;
 
-    void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
+    void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
 
     void configScoreState();
+    void configInputOutput();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExerciseComponent)
 };

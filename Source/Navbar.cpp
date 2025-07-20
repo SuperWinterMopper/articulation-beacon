@@ -2,7 +2,7 @@
 #include "Navbar.h"
 
 //==============================================================================
-Navbar::Navbar()
+Navbar::Navbar(juce::ValueTree scoreState) : scoreState(scoreState)
 {
     configureHomeButton();
     configurePrevButton();
@@ -124,6 +124,9 @@ void Navbar::configurePlayButton()
     path.loadPathFromData(pathData, sizeof(pathData));
 
     playButton.setShape(path, true, true, true);
+
+    //Switch video playing 
+    playButton.onClick = [this] {scoreState.setProperty(isVideoPlaying, !scoreState[isVideoPlaying], nullptr); };
 }
 
 void Navbar::configureSkipButton()

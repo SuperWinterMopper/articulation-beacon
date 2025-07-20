@@ -1,7 +1,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Constants.h"
+
+
 #include "ExerciseSelector.h"
 #include "ExerciseComponent.h"
 

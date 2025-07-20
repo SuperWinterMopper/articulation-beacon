@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "utils.h"
 
 //==============================================================================
 /*
@@ -8,7 +9,7 @@
 class Navbar  : public juce::Component
 {
 public:
-    Navbar();
+    Navbar(juce::ValueTree scoreState);
     ~Navbar() override;
 
     void paint (juce::Graphics&) override;
@@ -20,6 +21,8 @@ public:
 private:
     //note each button is a square so height = width
     const int buttonWidth = 40;
+
+    juce::ValueTree scoreState;
 
     juce::Colour buttonNormalColor  = juce::Colour(0xF030cdca);
     juce::Colour buttonOverColor    = juce::Colour(0xB930cdca);

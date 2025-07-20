@@ -5,6 +5,9 @@
 ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentView, juce::ValueTree a_viewState)
     : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState)
 {
+    configScoreState();
+    configInputOutput();
+
     curView.addListener(this);
     scoreState.addListener(this);
 
@@ -24,15 +27,30 @@ void ExerciseComponent::paint (juce::Graphics& g)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
 }
 
-void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) {
+void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) {
     DBG("valueTreePropertyChanged in ExerciseComponent CALLED!!!");
-
     //returns if state changed for another component, not this one
-    if (thisComponentView != static_cast<ViewOptions>((int)treeWhosePropertyHasChanged.getProperty(property))) return;
+    if (thisComponentView != static_cast<ViewOptions>((int)tree.getProperty(property))) return;
 
-    //TEMPORARY FOR TESTING. Every component will determine the files it must open based on it's exerciseID and Constants.h in the future
-    juce::String videosPath = "Resources/Videos/Exercise_2/line_1.mp4";
-    videoPlayer.setVideoPathAndLoad(videosPath);
+    if (property == viewState) {
+        juce::String videosPath = "Resources/Videos/Exercise_2/line_1.mp4";
+        videoPlayer.setVideoPathAndLoad(videosPath);
+    }
+    else if (property == scoreView) {
+
+    }
+    else if (property == isVideoPlaying) {
+
+    }
+    else if (property == isAnalyzing) {
+
+    }
+    else if (property == tempo) {
+
+    }
+    else {
+        DBG("This property doesn't exist...");
+    }
 }
 
 void ExerciseComponent::resized()
@@ -51,4 +69,20 @@ void ExerciseComponent::configScoreState() {
     scoreState.setProperty(isVideoPlaying, false, nullptr);
     scoreState.setProperty(isAnalyzing, false, nullptr);
     scoreState.setProperty(tempo, 90, nullptr); //set to 90bpm, temporary. In future set to actual value based on other file
+}
+
+void ExerciseComponent::configInputOutput() {
+
+    // Some platforms require permissions to open input channels so request that here
+    if (juce::RuntimePermissions::isRequired(juce::RuntimePermissions::recordAudio)
+        && !juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio))
+    {
+        juce::RuntimePermissions::request(juce::RuntimePermissions::recordAudio,
+            [&](bool granted) { setAudioChannels(granted ? 2 : 0, 2); });
+    }
+    else
+    {
+        // Specify the number of input and output channels that we want to open
+        setAudioChannels(2, 2);
+    }
 }
