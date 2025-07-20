@@ -6,6 +6,7 @@ ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentVi
     : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState)
 {
     curView.addListener(this);
+    scoreState.addListener(this);
 
     //asks MainComponent to update go to home
     navBar.homeButtonClick = [this]() { if (homeButtonClick) homeButtonClick(); };
@@ -19,8 +20,8 @@ ExerciseComponent::~ExerciseComponent()
 }
 
 void ExerciseComponent::paint (juce::Graphics& g)
-{    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
-
+{    
+    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
 }
 
 void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) {
@@ -43,4 +44,11 @@ void ExerciseComponent::resized()
     navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
 
     videoPlayer.setBounds(videoPaddingX, getHeight() - navBarHeight - videoHeight - videoPaddingY, videoWidth, videoHeight);
+}
+
+void ExerciseComponent::configScoreState() {
+    scoreState.setProperty(scoreView, 0, nullptr);
+    scoreState.setProperty(isVideoPlaying, false, nullptr);
+    scoreState.setProperty(isAnalyzing, false, nullptr);
+    scoreState.setProperty(tempo, 90, nullptr); //set to 90bpm, temporary. In future set to actual value based on other file
 }
