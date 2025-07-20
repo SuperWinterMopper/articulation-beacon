@@ -6,7 +6,7 @@ VideoPlayer::VideoPlayer()
 {
     addAndMakeVisible(video);
     DBG("addAndMakeVisible(video); HAS BEEN CALLED");
-    setSize(800, 800);
+    setSize(1024, 768);
 }
 
 VideoPlayer::~VideoPlayer()
@@ -16,7 +16,6 @@ VideoPlayer::~VideoPlayer()
 
 void VideoPlayer::paint (juce::Graphics& g)
 {
-
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
 
     g.setColour (juce::Colours::grey);

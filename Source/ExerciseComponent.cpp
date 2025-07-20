@@ -15,7 +15,7 @@ ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentVi
 
 ExerciseComponent::~ExerciseComponent()
 {
-
+    
 }
 
 void ExerciseComponent::paint (juce::Graphics& g)
@@ -34,10 +34,13 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& treeWhosePrope
     videoPlayer.setVideoPathAndLoad(videosPath);
 }
 
-
 void ExerciseComponent::resized()
 {
     const int navBarHeight = 100;
+    const int videoPaddingX = 100, videoPaddingY = 20;
+    const int videoWidth = getWidth() - 2 * videoPaddingX, videoHeight = navBarHeight * 2;
 
     navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
+
+    videoPlayer.setBounds(videoPaddingX, getHeight() - navBarHeight - videoHeight - videoPaddingY, videoWidth, videoHeight);
 }
