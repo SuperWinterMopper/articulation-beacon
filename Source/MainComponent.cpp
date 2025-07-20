@@ -59,8 +59,11 @@ void MainComponent::resized()
 
     appTitle.setBounds(titleXPadding, titleYPadding, appTitle.getFont().getStringWidth(appTitle.getText()), appTitle.getFont().getHeight());
     exerciseSelector.setBounds(exerciseSelectXPadding, exerciseSelectYPadding, getWidth() - 2 * exerciseSelectXPadding, getHeight());
-
     appTitle.toFront(false);
+
+    for (int i = 0; i < NUM_EXERCISES; i++) {
+        exercisesArray[i].setBounds(getLocalBounds());
+    }
 }
 
 //Handles logic for switching views. Note that viewSwitch assumes all components in ViewOptions have already been attached to MainComponent
