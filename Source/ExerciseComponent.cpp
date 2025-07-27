@@ -19,12 +19,23 @@ ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentVi
 
 ExerciseComponent::~ExerciseComponent()
 {
-    
+    shutdownAudio();
 }
 
 void ExerciseComponent::paint (juce::Graphics& g)
 {    
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
+}
+
+void ExerciseComponent::resized()
+{
+    const int navBarHeight = 100;
+    const int videoPaddingX = 100, videoPaddingY = 20;
+    const int videoWidth = getWidth() - 2 * videoPaddingX, videoHeight = navBarHeight * 2;
+
+    navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
+
+    videoPlayer.setBounds(videoPaddingX, getHeight() - navBarHeight - videoHeight - videoPaddingY, videoWidth, videoHeight);
 }
 
 void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) {
@@ -40,7 +51,7 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
 
     }
     else if (property == isVideoPlaying) {
-
+        
     }
     else if (property == isAnalyzing) {
 
@@ -53,16 +64,34 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
     }
 }
 
-void ExerciseComponent::resized()
+void ExerciseComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-    const int navBarHeight = 100;
-    const int videoPaddingX = 100, videoPaddingY = 20;
-    const int videoWidth = getWidth() - 2 * videoPaddingX, videoHeight = navBarHeight * 2;
-
-    navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
-
-    videoPlayer.setBounds(videoPaddingX, getHeight() - navBarHeight - videoHeight - videoPaddingY, videoWidth, videoHeight);
+    metronome.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
+
+void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+{
+    bufferToFill.clearActiveBufferRegion();
+
+    //if video is playing, keep operating metronome
+    if ( (bool) scoreState.getProperty(isVideoPlaying) == true)
+    {
+        metronome.getNextAudioBlock(bufferToFill);
+    }
+    else //video is stopped so stop metronome
+    {
+        metronome.reset();
+    }
+}
+
+void ExerciseComponent::releaseResources()
+{
+    // This will be called when the audio device stops, or when it is being
+    // restarted due to a setting change.
+
+    // For more details, see the help for AudioProcessor::releaseResources()
+}
+
 
 void ExerciseComponent::configScoreState() {
     scoreState.setProperty(scoreView, 0, nullptr);

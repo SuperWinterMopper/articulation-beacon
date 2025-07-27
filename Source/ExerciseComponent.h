@@ -3,7 +3,9 @@
 #include <JuceHeader.h>
 #include "Navbar.h"
 #include "VideoPlayer.h"
+#include "Metronome.h"
 #include "utils.h"
+#include "ScoreData.h"
 
 //==============================================================================
 class ExerciseComponent : public juce::AudioAppComponent, private juce::ValueTree::Listener
@@ -23,17 +25,18 @@ public:
     std::function<void()> homeButtonClick;
 
 private:
-    int exerciseID;
-    ViewOptions thisComponentView;
-    VideoPlayer videoPlayer;
-    Navbar navBar;
+    //scoreState is a crucial ValueTree object that keeps track of the state of the application's metronome, video, DSP, etc
+    juce::ValueTree scoreState{ scoreStateIdentifier };
 
     //This viewState owned by ExerciseComponent points to the viewState owned by MainComponent.
     //In other words, the viewState here reflects the current view state of the app
     juce::ValueTree curView;
 
-    //scoreState is a crucial ValueTree object that keeps track of the state of the application's metronome, video, DSP, etc
-    juce::ValueTree scoreState;
+    int exerciseID;
+    ViewOptions thisComponentView;
+    VideoPlayer videoPlayer;
+    Navbar navBar{scoreState};
+    Metronome metronome {defaultBPM};
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
 
