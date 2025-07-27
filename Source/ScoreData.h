@@ -1,3 +1,5 @@
 #pragma once
 
-static const int defaultBPM = 130;
+//this is really only for testing 
+static const int defaultBPM = 90;
+

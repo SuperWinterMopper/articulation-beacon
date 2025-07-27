@@ -43,8 +43,11 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
     //returns if state changed for another component, not this one
     if (thisComponentView != static_cast<ViewOptions>((int)tree.getProperty(property))) return;
 
-    if (property == viewState) {
-        juce::String videosPath = "Resources/Videos/Exercise_2/line_1.mp4";
+    if (property == viewState) { //this component is now selected
+        juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
+        juce::String lineNumOrWhole = scoreState.getProperty(scoreView).toString();
+
+        juce::String videosPath = "Resources/Videos/ex" + exerciseNum + "Line" + lineNumOrWhole + "Mod.mp4";
         videoPlayer.setVideoPathAndLoad(videosPath);
     }
     else if (property == scoreView) {
@@ -94,7 +97,7 @@ void ExerciseComponent::releaseResources()
 
 
 void ExerciseComponent::configScoreState() {
-    scoreState.setProperty(scoreView, 0, nullptr);
+    scoreState.setProperty(scoreView, 1, nullptr);
     scoreState.setProperty(isVideoPlaying, false, nullptr);
     scoreState.setProperty(isAnalyzing, false, nullptr);
     scoreState.setProperty(tempo, 90, nullptr); //set to 90bpm, temporary. In future set to actual value based on other file

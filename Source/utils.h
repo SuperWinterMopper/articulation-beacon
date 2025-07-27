@@ -12,12 +12,16 @@ enum class ViewOptions {
 	EX4
 };
 
-//Identifier for the viewing window state of the app
+//Base Identifier for the viewing window state of the app
 static juce::Identifier viewState("viewOption");
 
+//=============================================================================
+//Base Identifier for the score/DSP state of the exercise component
 static juce::Identifier scoreStateIdentifier("scoreStateIdentifier");
 
-//For scoreState: For which line score is on (0,1,2...) or "Whole" for displaying whole score
+//Below is all properties of scoreState:
+
+//For scoreState: For which line score is on (1,2,3...) or "Whole" for displaying whole score
 static juce::Identifier scoreView("scoreView");
 
 //For scoreState: Boolean, if video is actively in playback. Also correspond to metronome playback (so false -> both video and metronome are not playing)

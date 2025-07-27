@@ -34,7 +34,7 @@ private:
 
     int exerciseID;
     ViewOptions thisComponentView;
-    VideoPlayer videoPlayer;
+    VideoPlayer videoPlayer{ scoreState };
     Navbar navBar{scoreState};
     Metronome metronome {defaultBPM};
 
