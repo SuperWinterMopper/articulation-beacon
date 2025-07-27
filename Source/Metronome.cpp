@@ -36,7 +36,7 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
 {
 
     const int numSamps = bufferToFill.numSamples;
-    // how many samples we’d already processed into this beat
+    // how many samples weâ€™d already processed into this beat
     int prevRem = totalSamples % interval;
     totalSamples += numSamps;
 
