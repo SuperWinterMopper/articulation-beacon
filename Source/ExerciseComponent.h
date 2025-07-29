@@ -4,7 +4,7 @@
 #include "Navbar.h"
 #include "VideoPlayer.h"
 #include "Metronome.h"
-#include "utils.h"
+#include "Utils.h"
 #include "ScoreData.h"
 
 //==============================================================================
@@ -32,11 +32,11 @@ private:
     //In other words, the viewState here reflects the current view state of the app
     juce::ValueTree curView;
 
-    int exerciseID;
+    int exerciseID = 0; //for safety
     ViewOptions thisComponentView;
     VideoPlayer videoPlayer{ scoreState };
     Navbar navBar{scoreState};
-    Metronome metronome {defaultBPM};
+    Metronome metronome {defaultBPM, scoreState};
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
 

@@ -11,6 +11,10 @@ ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentVi
     curView.addListener(this);
     scoreState.addListener(this);
 
+    int setbpm = exerciseTempo[exerciseID][(int)scoreState.getProperty(tempo)];
+    DBG("setbpm is getting set to " << exerciseTempo[exerciseID][(int)scoreState.getProperty(tempo)] << " for this exercise");
+    metronome.setBPM(exerciseTempo[exerciseID][(int)scoreState.getProperty(tempo)]);
+
     //asks MainComponent to update go to home
     navBar.homeButtonClick = [this]() { if (homeButtonClick) homeButtonClick(); };
     addAndMakeVisible(videoPlayer);
@@ -39,9 +43,9 @@ void ExerciseComponent::resized()
 }
 
 void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) {
-    DBG("valueTreePropertyChanged in ExerciseComponent CALLED!!!");
     //returns if state changed for another component, not this one
-    if (thisComponentView != static_cast<ViewOptions>((int)tree.getProperty(property))) return;
+    if (thisComponentView != static_cast<ViewOptions>((int)tree.getProperty(property))) 
+        return;
 
     if (property == viewState) { //this component is now selected
         juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
@@ -53,7 +57,7 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
     else if (property == scoreView) {
 
     }
-    else if (property == isVideoPlaying) {
+    else if (property == isVideoPlaying) { //this is switched when Navbar play button is pressed
         
     }
     else if (property == isAnalyzing) {
@@ -61,6 +65,9 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
     }
     else if (property == tempo) {
 
+    }
+    else if (property == isMetronomePlaying) {
+        metronome.reset();
     }
     else {
         DBG("This property doesn't exist...");
@@ -76,14 +83,15 @@ void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bu
 {
     bufferToFill.clearActiveBufferRegion();
 
-    //if video is playing, keep operating metronome
-    if ( (bool) scoreState.getProperty(isVideoPlaying) == true)
+    //keep operating metronome if we're supposed to
+    if ( (bool) scoreState.getProperty(isMetronomePlaying) == true)
     {
         metronome.getNextAudioBlock(bufferToFill);
     }
-    else //video is stopped so stop metronome
+    else //stop metronome
     {
         metronome.reset();
+        scoreState.setProperty(isVideoPlaying, false, nullptr);
     }
 }
 
@@ -97,10 +105,16 @@ void ExerciseComponent::releaseResources()
 
 
 void ExerciseComponent::configScoreState() {
+    if (exerciseID < 0 || exerciseID >= exerciseTempo.size()) {
+        DBG("exerciseID is not correct, it's " << exerciseID);
+        jassert(false);
+    }
+
     scoreState.setProperty(scoreView, 1, nullptr);
     scoreState.setProperty(isVideoPlaying, false, nullptr);
     scoreState.setProperty(isAnalyzing, false, nullptr);
-    scoreState.setProperty(tempo, 90, nullptr); //set to 90bpm, temporary. In future set to actual value based on other file
+    scoreState.setProperty(tempo, 0, nullptr); //starts at slow tempo by default
+    scoreState.setProperty(isMetronomePlaying, false, nullptr);
 }
 
 void ExerciseComponent::configInputOutput() {

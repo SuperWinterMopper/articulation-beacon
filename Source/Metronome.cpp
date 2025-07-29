@@ -3,7 +3,7 @@
 #include "Metronome.h"
 
 //==============================================================================
-Metronome::Metronome(int bpm) : bpm(bpm)
+Metronome::Metronome(int bpm, juce::ValueTree a_scoreState) : bpm(bpm), scoreState(a_scoreState)
 {
     formatManager.registerBasicFormats();
 
@@ -17,7 +17,6 @@ Metronome::Metronome(int bpm) : bpm(bpm)
 
     metronomeSamplePtr.reset(new juce::AudioFormatReaderSource(formatReader, true));
     metronomeSamplePtr->setNextReadPosition(0);
-
 }
 
 void Metronome::prepareToPlay(int samplesPerBlock, double appSampleRate)
@@ -43,6 +42,13 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
     // did we cross the beat boundary?
     if (prevRem + numSamps >= interval)
     {
+        //====================================
+        curBeat++; //increment beat
+
+        //IMPORTANT: if the beat at 0 (we've finished our 4 clicks in), we start the video to play along with it
+        if (curBeat == 1) scoreState.setProperty(isVideoPlaying, true, nullptr);
+        //====================================
+
         // where, in this block, the click should start
         int clickOffset = interval - prevRem;
 
@@ -64,6 +70,7 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
 
 void Metronome::reset()
 {
-    totalSamples = 0;
+    totalSamples = 0; //reset
+    curBeat = -4; //reset
     metronomeSamplePtr->setNextReadPosition(0);
 }

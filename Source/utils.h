@@ -24,8 +24,14 @@ static juce::Identifier scoreStateIdentifier("scoreStateIdentifier");
 //For scoreState: For which line score is on (1,2,3...) or "Whole" for displaying whole score
 static juce::Identifier scoreView("scoreView");
 
-//For scoreState: Boolean, if video is actively in playback. Also correspond to metronome playback (so false -> both video and metronome are not playing)
+//For scoreState: Boolean, if video is actively in playback. DOES NOT correspond to metronome playback
 static juce::Identifier isVideoPlaying("isVideoPlaying");
 
+//For scoreState: boolean, if the metronome is current playing 
+static juce::Identifier isMetronomePlaying("isMetronomePlaying");
+
+//For scoreState: Boolean, true => audio playback muted, user is playing and we are presenting graphical feedback. 
 static juce::Identifier isAnalyzing("isAnalyzing");
+
+//For scoreState: Is exactly 0 (slow or default tempo) or 1 (fast tempo) 
 static juce::Identifier tempo("tempo");

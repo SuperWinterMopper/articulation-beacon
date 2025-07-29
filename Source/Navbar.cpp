@@ -126,7 +126,7 @@ void Navbar::configurePlayButton()
     playButton.setShape(path, true, true, true);
 
     //Switch video playing 
-    playButton.onClick = [this] {scoreState.setProperty(isVideoPlaying, !scoreState[isVideoPlaying], nullptr); };
+    playButton.onClick = [this] {scoreState.setProperty(isMetronomePlaying, !scoreState[isMetronomePlaying], nullptr); };
 }
 
 void Navbar::configureSkipButton()

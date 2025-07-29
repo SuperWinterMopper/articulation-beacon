@@ -19,8 +19,13 @@ VideoPlayer::~VideoPlayer()
 void VideoPlayer::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property)
 {
     if (property == isVideoPlaying) {
-        if ((bool)tree.getProperty(isVideoPlaying) == true) video.play();
-        else video.stop();
+        if ((bool)tree.getProperty(isVideoPlaying) == true) {
+            video.play();
+        }
+        else {
+            video.stop();
+            video.setPlayPosition(0.0);
+        }
     }
     //add more state updates if needed
 }
