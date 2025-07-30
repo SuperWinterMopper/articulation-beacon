@@ -5,7 +5,6 @@
 ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentView, juce::ValueTree a_viewState)
     : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState)
 {
-    configScoreState();
     configInputOutput();
 
     curView.addListener(this);
@@ -44,15 +43,25 @@ void ExerciseComponent::resized()
 
 void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) {
     //returns if state changed for another component, not this one
-    if (thisComponentView != static_cast<ViewOptions>((int)tree.getProperty(property))) 
-        return;
+    //if (thisComponentView != static_cast<ViewOptions>((int)tree.getProperty(property))) 
+    //    return;
 
-    if (property == viewState) { //this component is now selected
-        juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
-        juce::String lineNumOrWhole = scoreState.getProperty(scoreView).toString();
+    if (property == viewState) { //this component is now selected. Note this also implies the tree here is curView
+        //we are turning this on
+        if (thisComponentView == static_cast<ViewOptions>((int)tree.getProperty(viewState))) {
+            configScoreState();
+            juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
+            juce::String lineNumOrWhole = scoreState.getProperty(scoreView).toString();
 
-        juce::String videosPath = "Resources/Videos/ex" + exerciseNum + "Line" + lineNumOrWhole + "Mod.mp4";
-        videoPlayer.setVideoPathAndLoad(videosPath);
+            juce::String videosPath = "Resources/Videos/ex" + exerciseNum + "Line" + lineNumOrWhole + "Mod.mp4";
+            videoPlayer.setVideoPathAndLoad(videosPath);
+        }
+        else {
+            videoPlayer.stopVideo();
+            metronome.reset();
+            configScoreState();
+            //shutdownAudio();
+        }
     }
     else if (property == scoreView) {
 

@@ -60,6 +60,10 @@ void VideoPlayer::resized()
     video.setBounds(getLocalBounds());
 }
 
+void VideoPlayer::stopVideo() {
+    video.stop();   
+}
+
 void VideoPlayer::setVideoPathAndLoad(juce::String path)
 {
     DBG("WILL EXECUTE VIDEO LOAD CODE");

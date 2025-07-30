@@ -16,7 +16,7 @@ public:
     void resized() override;
 
     void setVideoPathAndLoad(juce::String path);
-
+    void stopVideo();
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
 
 private:
