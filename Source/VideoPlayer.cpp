@@ -19,6 +19,7 @@ VideoPlayer::~VideoPlayer()
 void VideoPlayer::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property)
 {
     if (property == isVideoPlaying) {
+        //if we're starting to play video
         if ((bool)tree.getProperty(isVideoPlaying) == true) {
             video.play();
         }
@@ -27,6 +28,16 @@ void VideoPlayer::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Id
             video.setPlayPosition(0.0);
         }
     }
+    if (property == isVideoMuted) {
+        //the changed property is whether it's muted, if it is then set audio level to 0.0
+        if ((bool)tree.getProperty(isVideoMuted) == true) {
+            video.setAudioVolume(0.0);
+        }
+        else {
+            video.setAudioVolume(defaultAudioLevel);
+        }
+    }
+
     //add more state updates if needed
 }
 

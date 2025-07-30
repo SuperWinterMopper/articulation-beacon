@@ -32,11 +32,11 @@ private:
     //In other words, the viewState here reflects the current view state of the app
     juce::ValueTree curView;
 
-    int exerciseID = 0; //for safety
+    int exerciseID = 0; //0 for safety
     ViewOptions thisComponentView;
     VideoPlayer videoPlayer{ scoreState };
     Navbar navBar{scoreState};
-    Metronome metronome {defaultBPM, scoreState};
+    Metronome metronome {defaultBPM, scoreState, exerciseID };
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
 

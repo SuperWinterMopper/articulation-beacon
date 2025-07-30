@@ -15,3 +15,14 @@ static const std::vector<std::vector<int>> exerciseTempo = {
 	{120}
 };
 
+static const std::vector<std::vector<int>> lineBeatLength = {
+	{0},
+	{16, 16, 16, 8},
+	{0},
+	{0},
+	{0},
+	{0},
+	{0},
+	{0},
+	{0}
+};

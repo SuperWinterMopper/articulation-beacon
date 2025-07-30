@@ -115,6 +115,7 @@ void ExerciseComponent::configScoreState() {
     scoreState.setProperty(isAnalyzing, false, nullptr);
     scoreState.setProperty(tempo, 0, nullptr); //starts at slow tempo by default
     scoreState.setProperty(isMetronomePlaying, false, nullptr);
+    scoreState.setProperty(isVideoMuted, false, nullptr);
 }
 
 void ExerciseComponent::configInputOutput() {

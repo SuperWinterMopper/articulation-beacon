@@ -20,6 +20,8 @@ public:
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
 
 private:
+    float defaultAudioLevel = .8;
+
     juce::ValueTree scoreState;
     juce::File filePath;
     juce::VideoComponent video{true};

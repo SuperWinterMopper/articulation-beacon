@@ -7,10 +7,10 @@
 //==============================================================================
 /*
 */
-class Metronome 
+class Metronome : private juce::ValueTree::Listener
 {
 public:
-    Metronome(int bpm, juce::ValueTree a_scoreState);
+    Metronome(int bpm, juce::ValueTree a_scoreState, int a_exerciseID);
 
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void reset();
@@ -26,13 +26,19 @@ private:
     //the current count of the metronome in the measure. Metronome always plays 4 beats before starting, hence -4
     int curBeat = -4;
 
-    int metronomeSampleLength = 0;
+    int metCycleNumBeats = 0;
 
     //number of samples in between clicks
     int interval{ 0 };
     double bpm{ defaultBPM };
+    int metronomeSampleLength = 0;
+
+    int exerciseID = 0;
 
     juce::ValueTree scoreState;
+
+    void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
+    void Metronome::setMetCycleNumBeats();
 
     juce::AudioFormatManager formatManager;
     std::unique_ptr <juce::AudioFormatReaderSource> metronomeSamplePtr{ nullptr };
