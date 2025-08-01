@@ -23,7 +23,7 @@ MainComponent::MainComponent()
     //attach the ABLook visual style
     setLookAndFeel(&ABLook);
 
-    // Set up file logging
+    // Set up file logging  
     setUpLogger();
 
     setSize(1280, 720);

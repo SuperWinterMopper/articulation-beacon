@@ -5,8 +5,6 @@
 ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentView, juce::ValueTree a_viewState)
     : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState)
 {
-    configInputOutput();
-
     curView.addListener(this);
     scoreState.addListener(this);
 
@@ -50,6 +48,7 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
         //we are turning this on
         if (thisComponentView == static_cast<ViewOptions>((int)tree.getProperty(viewState))) {
             configScoreState();
+            configInputOutput();
             juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
             juce::String lineNumOrWhole = scoreState.getProperty(scoreView).toString();
 
@@ -59,8 +58,7 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
         else {
             videoPlayer.stopVideo();
             metronome.reset();
-            configScoreState();
-            //shutdownAudio();
+            shutdownAudio();
         }
     }
     else if (property == scoreView) {
