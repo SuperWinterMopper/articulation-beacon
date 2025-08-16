@@ -35,7 +35,7 @@ private:
     int exerciseID = 0; //0 for safety
     ViewOptions thisComponentView;
     VideoPlayer videoPlayer{ scoreState };
-    Navbar navBar{scoreState};
+    Navbar navBar{scoreState, thisComponentView};
     Metronome metronome {defaultBPM, scoreState, exerciseID };
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;

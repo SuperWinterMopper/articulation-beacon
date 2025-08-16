@@ -2,19 +2,23 @@
 #include "Navbar.h"
 
 //==============================================================================
-Navbar::Navbar(juce::ValueTree scoreState) : scoreState(scoreState)
+Navbar::Navbar(juce::ValueTree scoreState, ViewOptions thisComponentView) : scoreState(scoreState), thisComponentView(thisComponentView)
 {
     configureHomeButton();
     configurePrevButton();
     configurePlayButton();
     configureSkipButton();
     configureSettingsButton();
+    configureHearPlayButton();
+    configureTempoButton();
 
     addAndMakeVisible(homeButton);
     addAndMakeVisible(prevButton);
     addAndMakeVisible(playButton);
     addAndMakeVisible(skipButton);
     addAndMakeVisible(settingsButton);
+    addAndMakeVisible(hearPlayButton);
+    addAndMakeVisible(tempoButton);
 
     //this is a default size but will be overidden by parent Exercise components
     setSize(100, 800);
@@ -32,15 +36,45 @@ void Navbar::paint (juce::Graphics& g)
 
 void Navbar::resized()
 {
-    int XForCenterButton = (getWidth() / 2) - (buttonWidth / 2), YForCenterButton = (getHeight() / 2) - (buttonWidth / 2);
+    //int XForCenterButton = (getWidth() / 2) - (buttonWidth / 2), YForCenterButton = (getHeight() / 2) - (buttonWidth / 2);
+    //int buttonSpacing = 80;
+
+    ////this seems archaic but I'm not learning flexbox for juce
+    //homeButton.setBounds(XForCenterButton - 2 * buttonSpacing - 2 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
+    //prevButton.setBounds(XForCenterButton - 1 * buttonSpacing - 1 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
+    //playButton.setBounds(XForCenterButton - 0 * buttonSpacing - 0 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
+    //skipButton.setBounds(XForCenterButton + 1 * buttonSpacing + 1 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
+    //settingsButton.setBounds(XForCenterButton + 2 * buttonSpacing + 2 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
+
+    int XForCenterButton = (getWidth() / 2) - (buttonWidth / 2);
+    int YForCenterButton = (getHeight() / 2) - (buttonWidth / 2);
     int buttonSpacing = 80;
 
-    //this seems archaic but I'm not learning flexbox for juce
-    homeButton.setBounds(XForCenterButton - 2 * buttonSpacing - 2 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-    prevButton.setBounds(XForCenterButton - 1 * buttonSpacing - 1 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-    playButton.setBounds(XForCenterButton - 0 * buttonSpacing - 0 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-    skipButton.setBounds(XForCenterButton + 1 * buttonSpacing + 1 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-    settingsButton.setBounds(XForCenterButton + 2 * buttonSpacing + 2 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
+    // Keep existing five buttons centered exactly as before
+    homeButton.setBounds(XForCenterButton - 2 * buttonSpacing - 2 * buttonWidth, YForCenterButton, buttonWidth, buttonWidth);
+    prevButton.setBounds(XForCenterButton - 1 * buttonSpacing - 1 * buttonWidth, YForCenterButton, buttonWidth, buttonWidth);
+    playButton.setBounds(XForCenterButton - 0 * buttonSpacing - 0 * buttonWidth, YForCenterButton, buttonWidth, buttonWidth);
+    skipButton.setBounds(XForCenterButton + 1 * buttonSpacing + 1 * buttonWidth, YForCenterButton, buttonWidth, buttonWidth);
+    settingsButton.setBounds(XForCenterButton + 2 * buttonSpacing + 2 * buttonWidth, YForCenterButton, buttonWidth, buttonWidth);
+
+    // ---- New buttons to the RIGHT of settings (do not affect centering) ----
+    // Compute dynamic widths so the text fits nicely.
+    const auto textH = buttonWidth; // keep height consistent with icon buttons
+
+    auto fontHP = getLookAndFeel().getTextButtonFont(hearPlayButton, textH);
+    auto fontTmp = getLookAndFeel().getTextButtonFont(tempoButton, textH);
+
+    const int hearPlayWidth = juce::jmax(buttonWidth,
+        (int)std::ceil(fontHP.getStringWidthFloat("Hear then Play")) + 16); // + padding
+
+    const int tempoWidth = juce::jmax(buttonWidth,
+        (int)std::ceil(fontTmp.getStringWidthFloat("120bpm")) + 16);
+
+    const int xAfterSettings = settingsButton.getRight() + buttonSpacing;
+
+    hearPlayButton.setBounds(xAfterSettings, YForCenterButton, hearPlayWidth, textH);
+    tempoButton.setBounds(hearPlayButton.getRight() + buttonSpacing, YForCenterButton, tempoWidth, textH);
+
 }
 
 void Navbar::configureHomeButton()
@@ -158,4 +192,59 @@ void Navbar::configureSettingsButton()
     path.loadPathFromData(pathData, sizeof(pathData));
 
     settingsButton.setShape(path, true, true, true); 
+}
+
+void Navbar::configureHearPlayButton()
+{
+    // Style roughly aligned with your colour scheme
+    hearPlayButton.setColour(juce::TextButton::buttonColourId, buttonNormalColor);
+    hearPlayButton.setColour(juce::TextButton::buttonOnColourId, buttonDownColor);
+    hearPlayButton.setColour(juce::TextButton::textColourOffId, juce::Colours::black);
+    hearPlayButton.setColour(juce::TextButton::textColourOnId, juce::Colours::black);
+
+    hearPlayButton.onClick = [this]
+        {
+            auto current = scoreState.getProperty(userMode).toString();
+            if (current == "Hear then Play") {
+                hearPlayButton.setButtonText("Play");
+                scoreState.setProperty(userMode, "Play", nullptr);
+            }
+            else if (current == "Play") {
+                hearPlayButton.setButtonText("Hear then Play");
+                scoreState.setProperty(userMode, "Hear then Play", nullptr);
+            }
+            else {
+                DBG("userMode incorrect inside Navbar");
+                jassert(false);
+            }
+        };
+}
+
+void Navbar::configureTempoButton()
+{
+    int exerciseNum = static_cast<int>(thisComponentView) - 1; //convert enum value to int and make 0-indexed
+    int slowTempo = exerciseTempo[exerciseNum][0]; //initially 0
+    tempoButton.setButtonText(std::to_string(slowTempo) + "bpm");
+
+    tempoButton.setColour(juce::TextButton::buttonColourId, buttonNormalColor);
+    tempoButton.setColour(juce::TextButton::buttonOnColourId, buttonDownColor);
+    tempoButton.setColour(juce::TextButton::textColourOffId, juce::Colours::black);
+    tempoButton.setColour(juce::TextButton::textColourOnId, juce::Colours::black);
+
+    tempoButton.onClick = [this]
+        {
+            //convert enum value to int and make 0-indexed
+            int exerciseNum = static_cast<int>(thisComponentView) - 1; 
+
+            //this exercise doens't have a fast version, don't do anything
+            if (exerciseTempo[exerciseNum].size() < 2)
+                return;
+                
+            // switch to opposite tempo (slow to fast, fast to slow)
+            scoreState.setProperty(tempo, int(scoreState.getProperty(tempo)) == 0 ? 1 : 0, nullptr);
+
+            int newTempo = exerciseTempo[exerciseNum][int(scoreState.getProperty(tempo))];
+
+            tempoButton.setButtonText(std::to_string(newTempo) + "bpm");
+        };
 }

@@ -20,9 +20,11 @@ static juce::Identifier viewState("viewOption");
 static juce::Identifier scoreStateIdentifier("scoreStateIdentifier");
 
 //Below is all properties of scoreState:
-	
 //For scoreState: For which line score is on (0-indexed so 0,1,2...) or "Whole" for displaying whole score
 static juce::Identifier scoreView("scoreView");
+
+//For scoreState: Exactly either "Hear then Play", or "Play". The logic divergence for this is contained in Metronome.
+static juce::Identifier userMode("scoreView");
 
 //For scoreState: Boolean, if video is actively in playback. DOES NOT correspond to metronome playback
 static juce::Identifier isVideoPlaying("isVideoPlaying");

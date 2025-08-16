@@ -31,7 +31,7 @@ void ExerciseComponent::resized()
 {
     const int navBarHeight = 100;
     const int videoPaddingX = 100, videoPaddingY = 20;
-    const int videoWidth = getWidth() - 2 * videoPaddingX, videoHeight = navBarHeight * 2;
+    const int videoWidth = getWidth() - 2 * videoPaddingX, videoHeight = navBarHeight * 6;
 
     navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
 
@@ -46,12 +46,13 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
     if (property == viewState) { //this component is now selected. Note this also implies the tree here is curView
         //we are turning this on
         if (thisComponentView == static_cast<ViewOptions>((int)tree.getProperty(viewState))) {
+            DBG("INSIDE valueTreePropertyChanged of ExerciseComponet, about to call configScoreState");
             configScoreState();
             configInputOutput();
             juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
             juce::String lineNumOrWhole = scoreState.getProperty(scoreView).toString();
 
-            juce::String videosPath = "Resources/Videos/ex" + exerciseNum + "Line" + lineNumOrWhole + "Mod.mp4";
+            juce::String videosPath = "Resources/Videos/ex" + exerciseNum + lineNumOrWhole + "Mod.mp4";
             videoPlayer.setVideoPathAndLoad(videosPath);
         }
         else {
@@ -59,6 +60,9 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
             metronome.reset();
             shutdownAudio();
         }
+    }
+    else if (property == userMode) {
+
     }
     else if (property == scoreView) {
 
@@ -117,6 +121,7 @@ void ExerciseComponent::configScoreState() {
     }
 
     scoreState.setProperty(scoreView, "Whole", nullptr);
+    scoreState.setProperty(userMode, "Hear then Play", nullptr);
     scoreState.setProperty(isVideoPlaying, false, nullptr);
     scoreState.setProperty(isAnalyzing, false, nullptr);
     scoreState.setProperty(tempo, 0, nullptr); //starts at slow tempo by default

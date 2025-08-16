@@ -15,8 +15,9 @@ public:
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void reset();
     void prepareToPlay(int samplesPerBlock, double sampleRate);
-    void setBPM(int a_bpm) { bpm = (double) a_bpm; interval = int(60.0 / a_bpm * sampleRate);
-    };
+    void setBPM(int a_bpm) { bpm = (double) a_bpm; interval = int(60.0 / a_bpm * sampleRate); };
+    void hearThenPlayControl();
+    void playControl();
 
 private:
     //running counter of how many samples have been processed so far in this 1 click-cycle

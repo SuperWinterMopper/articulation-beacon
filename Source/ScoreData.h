@@ -10,19 +10,20 @@ static const std::vector<std::vector<int>> exerciseTempo = {
 	{90, 120},
 	{64, 86},
 	{70, 90},
+	{70},
 	{55, 80},
 	{100},
 	{120}
 };
 
 static const std::vector<std::vector<int>> lineBeatLength = {
-	{0},
+	{32, 32, 32},
 	{16, 16, 16, 8},
-	{0},
-	{0},
-	{0},
-	{0},
-	{0},
-	{0},
-	{0}
+	{12, 12, 16},
+	{20, 24, 20},
+	{26, 26, 26, 13},
+	{12, 12, 8},
+	{0}, // this one is weird with a pick up, let's not deal with it for now
+	{12, 12, 8},
+	{12, 18, 18}
 };

@@ -33,9 +33,10 @@ void Metronome::prepareToPlay(int samplesPerBlock, double appSampleRate)
     }
 }
 
-void Metronome::setMetCycleNumBeats() {
+void Metronome::setMetCycleNumBeats() 
+{
     metCycleNumBeats = 0;
-
+    DBG("inside setMetCycleNumBeats, the scoreState.getProperty(scoreView).toString() is " << scoreState.getProperty(scoreView).toString());
     //if the number of beats for this met cycle should be the whole exercise, then set it so
     if (scoreState.getProperty(scoreView).toString() == "Whole") {
         for (int i = 0; i < lineBeatLength[exerciseID].size(); i++)
@@ -59,6 +60,15 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
     {
         //====================================
         curBeat++; //increment beat
+
+        if (scoreState.getProperty(userMode).toString() == "Hear then Play")
+            hearThenPlayControl();
+        else if (scoreState.getProperty(userMode).toString() == "Play")
+            playControl();
+        else {
+            DBG("userMode HAS NOT BEEN SET PROPERLY");
+            jassert(false);
+        }
 
         //IMPORTANT: if the beat at 1 (we've finished our 4 clicks in), we start the video to play along with it
         if (curBeat == 1) {
@@ -109,6 +119,48 @@ void Metronome::reset()
     metronomeSamplePtr->setNextReadPosition(0);
 }
 
-void Metronome::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) {
+void Metronome::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) 
+{
+    if (tree == scoreState && property == scoreView) 
+        setMetCycleNumBeats();
+}
 
+// Metronome's logic for handling video and analyzing logic for if `userMode` is "Hear than Play"
+void Metronome::hearThenPlayControl() 
+{
+    //IMPORTANT: if the beat at 1 (we've finished our 4 clicks in), we start the video to play along with it
+    if (curBeat == 1) {
+        scoreState.setProperty(isVideoPlaying, true, nullptr);
+        scoreState.setProperty(isVideoMuted, false, nullptr);
+    }
+    else if (curBeat == metCycleNumBeats + 1) { //recording has just finished playing, user's turn to play 
+
+        //this resets the video
+        scoreState.setProperty(isVideoPlaying, false, nullptr);
+        scoreState.setProperty(isVideoPlaying, true, nullptr);
+
+        //Mute the video and begin analyzing
+        scoreState.setProperty(isAnalyzing, true, nullptr);
+        scoreState.setProperty(isVideoMuted, true, nullptr);
+    }
+    else if (curBeat == metCycleNumBeats * 2 + 1) { //now we've finished 1 listen + play cycle, so reset and do again
+        scoreState.setProperty(isVideoPlaying, false, nullptr);
+        scoreState.setProperty(isVideoMuted, false, nullptr);
+        reset();
+        curBeat = 0; //no 4-beat count in
+    }
+}
+
+void Metronome::playControl()
+{
+    if (curBeat == 1) {
+        scoreState.setProperty(isVideoPlaying, true, nullptr);
+        scoreState.setProperty(isVideoMuted, true, nullptr);
+        scoreState.setProperty(isAnalyzing, true, nullptr);
+    }
+    else if (curBeat == metCycleNumBeats) {
+        scoreState.setProperty(isVideoPlaying, false, nullptr);
+        scoreState.setProperty(isAnalyzing, false, nullptr);
+        reset();
+    }
 }
