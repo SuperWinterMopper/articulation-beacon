@@ -24,6 +24,7 @@ static const std::vector<std::vector<int>> lineBeatLength = {
 	{26, 26, 26, 13},
 	{12, 12, 8},
 	{0}, // this one is weird with a pick up, let's not deal with it for now
+	{8, 12, 12},
 	{12, 12, 8},
 	{12, 18, 18}
 };

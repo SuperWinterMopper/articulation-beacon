@@ -8,12 +8,10 @@ ExerciseSelector::ExerciseSelector()
         juce::TextButton& exerciseButton = exerciseButtons[i];
         addAndMakeVisible(exerciseButton);
         exerciseButton.setButtonText("Exercise " + juce::String(i + 1));
-    }
 
-    exerciseButtons[0].onClick = [this] { if (onSelectExercise) onSelectExercise(ViewOptions::EX1); };
-    exerciseButtons[1].onClick = [this] { if (onSelectExercise) onSelectExercise(ViewOptions::EX2); };
-    exerciseButtons[2].onClick = [this] { if (onSelectExercise) onSelectExercise(ViewOptions::EX3); };
-    exerciseButtons[3].onClick = [this] { if (onSelectExercise) onSelectExercise(ViewOptions::EX4); };
+        //set Selector for this exercise
+        exerciseButton.onClick = [this, i] { if (onSelectExercise) onSelectExercise(static_cast<ViewOptions>(i + 1)); };
+    }
 
     setSize(420, 500);
 }

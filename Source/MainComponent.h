@@ -87,6 +87,12 @@ private:
         {1, ViewOptions::EX2, curView},
         {2, ViewOptions::EX3, curView},
         {3, ViewOptions::EX4, curView},
+        {4, ViewOptions::EX5, curView},
+        {5, ViewOptions::EX6, curView},
+        {6, ViewOptions::EX7, curView},
+        {7, ViewOptions::EX8, curView},
+        {8, ViewOptions::EX9, curView},
+        {9, ViewOptions::EX10, curView}
     } };
 
     std::unique_ptr<juce::FileLogger> fileLogger; 

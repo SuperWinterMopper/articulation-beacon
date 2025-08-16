@@ -2,14 +2,20 @@
 
 #pragma once
 
-static const size_t NUM_EXERCISES = 4;
+static const size_t NUM_EXERCISES = 10;
 
 enum class ViewOptions {
 	HOME,
 	EX1,
 	EX2,
 	EX3,
-	EX4
+	EX4,
+	EX5,
+	EX6,
+	EX7,
+	EX8,
+	EX9,
+	EX10,
 };
 
 //Base Identifier for the viewing window state of the app

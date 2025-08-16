@@ -69,53 +69,33 @@ void MainComponent::resized()
 void MainComponent::viewSwitch(ViewOptions newViewOption) {
     DBG("CALLED viewSwitch");
     ViewOptions curViewOption = static_cast<ViewOptions>((int)curView.getProperty(viewState));
-    //ViewOptions newViewOption = static_cast<ViewOptions>((int)newView.getProperty(viewState));
 
     if (curViewOption == newViewOption) return;
 
+    //========================================================
     //set the curView to invisible to switch to the newView
-    switch (curViewOption) {
-        case ViewOptions::HOME:
-            appTitle.setVisible(false);
-            exerciseSelector.setVisible(false);
-            break;
-        case ViewOptions::EX1:
-            exercisesArray[0].setVisible(false);
-            break;
-        case ViewOptions::EX2:
-            exercisesArray[1].setVisible(false);
-            break;
-        case ViewOptions::EX3:
-            exercisesArray[2].setVisible(false);
-            break;
-        case ViewOptions::EX4:
-            exercisesArray[3].setVisible(false);
-            break;
+    if (curViewOption == ViewOptions::HOME) {
+        appTitle.setVisible(false);
+        exerciseSelector.setVisible(false);
     }
+    else {
+        int i = static_cast<int>(curViewOption) - static_cast<int>(ViewOptions::EX1); 
+        exercisesArray[i].setVisible(false);
+    }
+    //========================================================
 
+    //========================================================
     //set the newView to visible, completing the view switch
-    switch (newViewOption) {
-        case ViewOptions::HOME:
-            appTitle.setVisible(true);
-            exerciseSelector.setVisible(true);
-            break;
-        case ViewOptions::EX1:
-            exercisesArray[0].setBounds(getLocalBounds());
-            exercisesArray[0].setVisible(true);
-            break;
-        case ViewOptions::EX2:
-            exercisesArray[1].setBounds(getLocalBounds());
-            exercisesArray[1].setVisible(true);
-            break;
-        case ViewOptions::EX3:
-            exercisesArray[2].setBounds(getLocalBounds());
-            exercisesArray[2].setVisible(true);
-            break;
-        case ViewOptions::EX4:
-            exercisesArray[3].setBounds(getLocalBounds());
-            exercisesArray[3].setVisible(true);
-            break;
+    if (newViewOption == ViewOptions::HOME) {
+        appTitle.setVisible(true);
+        exerciseSelector.setVisible(true);
     }
+    else {
+        int i = static_cast<int>(newViewOption) - static_cast<int>(ViewOptions::EX1);
+        exercisesArray[i].setBounds(getLocalBounds());
+        exercisesArray[i].setVisible(true);
+    }
+    //========================================================
 
     //set the current view officially to newView
     DBG("setting valueTree curView to a new value, " << static_cast<int>(newViewOption));
