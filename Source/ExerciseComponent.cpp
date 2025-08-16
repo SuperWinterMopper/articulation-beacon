@@ -23,8 +23,7 @@ ExerciseComponent::~ExerciseComponent()
     shutdownAudio();
 }
 
-void ExerciseComponent::paint (juce::Graphics& g)
-{    
+void ExerciseComponent::paint (juce::Graphics& g) {    
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
 }
 
@@ -117,7 +116,7 @@ void ExerciseComponent::configScoreState() {
         jassert(false);
     }
 
-    scoreState.setProperty(scoreView, 1, nullptr);
+    scoreState.setProperty(scoreView, "Whole", nullptr);
     scoreState.setProperty(isVideoPlaying, false, nullptr);
     scoreState.setProperty(isAnalyzing, false, nullptr);
     scoreState.setProperty(tempo, 0, nullptr); //starts at slow tempo by default
