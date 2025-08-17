@@ -65,7 +65,7 @@ public:
     }
 };
 
-class MainComponent : public juce::Component
+class MainComponent : public juce::AudioAppComponent
 {
 public:
     MainComponent();
@@ -73,6 +73,10 @@ public:
 
     void paint (juce::Graphics& g) override;
     void resized() override;
+
+    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
+    void releaseResources() override;
 
 private:
     //"ARTICULATION BEACON" logo
@@ -94,6 +98,8 @@ private:
         {8, ViewOptions::EX9, curView},
         {9, ViewOptions::EX10, curView}
     } };
+
+    int currentExerciseIndex = -1; // -1 means HOME
 
     std::unique_ptr<juce::FileLogger> fileLogger; 
 
@@ -118,6 +124,9 @@ private:
 
     //sets up COM for Windows devices 
     void initializeCOM();
+
+    //sets up input and output channels
+    void configInputOutput();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

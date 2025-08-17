@@ -8,7 +8,7 @@
 #include "ScoreData.h"
 
 //==============================================================================
-class ExerciseComponent : public juce::AudioAppComponent, private juce::ValueTree::Listener
+class ExerciseComponent : public juce::Component, private juce::ValueTree::Listener
 {
 public:
     ExerciseComponent(int exerciseID, ViewOptions thisComponentView, juce::ValueTree a_viewState);
@@ -17,9 +17,9 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
-    void releaseResources() override;
+    void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
+    void releaseResources();
 
     //this function is called by the home button to get back to home screen
     std::function<void()> homeButtonClick;

@@ -20,7 +20,6 @@ ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentVi
 
 ExerciseComponent::~ExerciseComponent()
 {
-    shutdownAudio();
 }
 
 void ExerciseComponent::paint (juce::Graphics& g) {    
@@ -44,7 +43,7 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
         if (thisComponentView == static_cast<ViewOptions>((int)tree.getProperty(viewState))) {
             DBG("INSIDE valueTreePropertyChanged of ExerciseComponet, about to call configScoreState");
             configScoreState();
-            configInputOutput();
+            //configInputOutput();
 
             juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
             juce::String videosPath = "Resources/Videos/ex" + exerciseNum + "WholeMod.mp4";
@@ -53,7 +52,6 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
         else {
             videoPlayer.stopVideo();
             metronome.reset();
-            shutdownAudio();
         }
     }
     
@@ -142,20 +140,20 @@ void ExerciseComponent::configScoreState() {
     scoreState.setProperty(isVideoPlaying, false, nullptr);
 }
 
-void ExerciseComponent::configInputOutput() {
-
-    int inputChannels = 0, outputChannels = 2;
-
-    // Some platforms require permissions to open input channels so request that here
-    if (juce::RuntimePermissions::isRequired(juce::RuntimePermissions::recordAudio)
-        && !juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio))
-    {
-        juce::RuntimePermissions::request(juce::RuntimePermissions::recordAudio,
-            [&](bool granted) { setAudioChannels(granted ? inputChannels : 0, outputChannels); });
-    }
-    else
-    {
-        // Specify the number of input and output channels that we want to open
-        setAudioChannels(inputChannels, outputChannels);
-    }
-}
+//void ExerciseComponent::configInputOutput() {
+//
+//    int inputChannels = 0, outputChannels = 2;
+//
+//    // Some platforms require permissions to open input channels so request that here
+//    if (juce::RuntimePermissions::isRequired(juce::RuntimePermissions::recordAudio)
+//        && !juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio))
+//    {
+//        juce::RuntimePermissions::request(juce::RuntimePermissions::recordAudio,
+//            [&](bool granted) { setAudioChannels(granted ? inputChannels : 0, outputChannels); });
+//    }
+//    else
+//    {
+//        // Specify the number of input and output channels that we want to open
+//        setAudioChannels(inputChannels, outputChannels);
+//    }
+//}

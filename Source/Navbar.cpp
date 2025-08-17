@@ -36,16 +36,6 @@ void Navbar::paint (juce::Graphics& g)
 
 void Navbar::resized()
 {
-    //int XForCenterButton = (getWidth() / 2) - (buttonWidth / 2), YForCenterButton = (getHeight() / 2) - (buttonWidth / 2);
-    //int buttonSpacing = 80;
-
-    ////this seems archaic but I'm not learning flexbox for juce
-    //homeButton.setBounds(XForCenterButton - 2 * buttonSpacing - 2 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-    //prevButton.setBounds(XForCenterButton - 1 * buttonSpacing - 1 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-    //playButton.setBounds(XForCenterButton - 0 * buttonSpacing - 0 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-    //skipButton.setBounds(XForCenterButton + 1 * buttonSpacing + 1 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-    //settingsButton.setBounds(XForCenterButton + 2 * buttonSpacing + 2 * buttonWidth, YForCenterButton, this->buttonWidth, this->buttonWidth);
-
     int XForCenterButton = (getWidth() / 2) - (buttonWidth / 2);
     int YForCenterButton = (getHeight() / 2) - (buttonWidth / 2);
     int buttonSpacing = 80;
@@ -57,8 +47,6 @@ void Navbar::resized()
     skipButton.setBounds(XForCenterButton + 1 * buttonSpacing + 1 * buttonWidth, YForCenterButton, buttonWidth, buttonWidth);
     settingsButton.setBounds(XForCenterButton + 2 * buttonSpacing + 2 * buttonWidth, YForCenterButton, buttonWidth, buttonWidth);
 
-    // ---- New buttons to the RIGHT of settings (do not affect centering) ----
-    // Compute dynamic widths so the text fits nicely.
     const auto textH = buttonWidth; // keep height consistent with icon buttons
 
     auto fontHP = getLookAndFeel().getTextButtonFont(hearPlayButton, textH);

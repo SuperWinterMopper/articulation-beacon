@@ -70,29 +70,6 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
             jassert(false);
         }
 
-        //IMPORTANT: if the beat at 1 (we've finished our 4 clicks in), we start the video to play along with it
-        //if (curBeat == 1) {
-        //    scoreState.setProperty(isVideoPlaying, true, nullptr);
-        //    scoreState.setProperty(isVideoMuted, false, nullptr);
-        //}
-        //else if (curBeat == metCycleNumBeats + 1) { //recording has just finished playing, user's turn to play 
-
-        //    //this resets the video
-        //    scoreState.setProperty(isVideoPlaying, false, nullptr);
-        //    scoreState.setProperty(isVideoPlaying, true, nullptr);
-
-        //    //Mute the video and begin analyzing
-        //    scoreState.setProperty(isAnalyzing, true, nullptr);
-        //    scoreState.setProperty(isVideoMuted, true, nullptr);
-        //}
-        //else if (curBeat == metCycleNumBeats * 2 + 1) { //now we've finished 1 listen + play cycle, so reset and do again
-        //    scoreState.setProperty(isVideoPlaying, false, nullptr);
-        //    scoreState.setProperty(isVideoMuted, false, nullptr);
-        //    reset();
-        //    curBeat = 0; //no 4-beat count in
-        //}
-        //====================================
-
         // where, in this block, the click should start
         int clickOffset = interval - prevRem;
 

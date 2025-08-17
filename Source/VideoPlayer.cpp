@@ -21,7 +21,6 @@ void VideoPlayer::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Id
     if (property == isVideoPlaying) {
         //if we're starting to play video
         if ((bool)tree.getProperty(isVideoPlaying) == true) {
-            //video.setAudioVolume(defaultAudioLevel);
             video.play();
         }
         else {

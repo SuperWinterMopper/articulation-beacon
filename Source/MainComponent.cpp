@@ -26,12 +26,15 @@ MainComponent::MainComponent()
     // Set up file logging  
     setUpLogger();
 
+    configInputOutput();
+
     setSize(1280, 720);
 }
 
 MainComponent::~MainComponent()
 {
     setLookAndFeel(nullptr);
+    shutdownAudio();
     juce::Logger::setCurrentLogger(nullptr);
     #if JUCE_WINDOWS
         if (comInitialized)
@@ -87,13 +90,14 @@ void MainComponent::viewSwitch(ViewOptions newViewOption) {
     //========================================================
     //set the newView to visible, completing the view switch
     if (newViewOption == ViewOptions::HOME) {
+        currentExerciseIndex = -1;
         appTitle.setVisible(true);
         exerciseSelector.setVisible(true);
     }
     else {
-        int i = static_cast<int>(newViewOption) - static_cast<int>(ViewOptions::EX1);
-        exercisesArray[i].setBounds(getLocalBounds());
-        exercisesArray[i].setVisible(true);
+        currentExerciseIndex = static_cast<int>(newViewOption) - static_cast<int>(ViewOptions::EX1);
+        exercisesArray[currentExerciseIndex].setBounds(getLocalBounds());
+        exercisesArray[currentExerciseIndex].setVisible(true);
     }
     //========================================================
 
@@ -104,6 +108,29 @@ void MainComponent::viewSwitch(ViewOptions newViewOption) {
     resized(); // keep layout right  
 }
 
+void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+{
+    // let every exercise set up its metronome, etc.
+    for (auto& ex : exercisesArray)
+        ex.prepareToPlay(samplesPerBlockExpected, sampleRate);
+}
+
+void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+{
+    bufferToFill.clearActiveBufferRegion();
+
+    if (currentExerciseIndex >= 0) {
+        exercisesArray[currentExerciseIndex].getNextAudioBlock(bufferToFill);
+    }
+}
+
+void MainComponent::releaseResources()
+{
+    for (auto& ex : exercisesArray)
+        ex.releaseResources();
+}
+
+
 void MainComponent::setUpExerciseComponents() {
 
     for (ExerciseComponent& exComp : exercisesArray)
@@ -111,6 +138,24 @@ void MainComponent::setUpExerciseComponents() {
         //connect homeButtonClick to viewSwitch. not the greatest programming but for now it works
         exComp.homeButtonClick = [this]() { viewSwitch(ViewOptions::HOME); };
         addChildComponent(exComp);
+    }
+}
+
+void MainComponent::configInputOutput() {
+
+    int inputChannels = 0, outputChannels = 2;
+
+    // Some platforms require permissions to open input channels so request that here
+    if (juce::RuntimePermissions::isRequired(juce::RuntimePermissions::recordAudio)
+        && !juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio))
+    {
+        juce::RuntimePermissions::request(juce::RuntimePermissions::recordAudio,
+            [&](bool granted) { setAudioChannels(granted ? inputChannels : 0, outputChannels); });
+    }
+    else
+    {
+        // Specify the number of input and output channels that we want to open
+        setAudioChannels(inputChannels, outputChannels);
     }
 }
 
