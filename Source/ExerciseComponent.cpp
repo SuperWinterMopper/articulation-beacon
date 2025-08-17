@@ -39,20 +39,15 @@ void ExerciseComponent::resized()
 }
 
 void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) {
-    //returns if state changed for another component, not this one
-    //if (thisComponentView != static_cast<ViewOptions>((int)tree.getProperty(property))) 
-    //    return;
-
-    if (property == viewState) { //this component is now selected. Note this also implies the tree here is curView
+    if (property == viewState) { //Operates if this exercise may be selected, or ANY exercise may be deselected. Note this also implies the tree here is curView
         //we are turning this on
         if (thisComponentView == static_cast<ViewOptions>((int)tree.getProperty(viewState))) {
             DBG("INSIDE valueTreePropertyChanged of ExerciseComponet, about to call configScoreState");
             configScoreState();
             configInputOutput();
-            juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
-            juce::String lineNumOrWhole = scoreState.getProperty(scoreView).toString();
 
-            juce::String videosPath = "Resources/Videos/ex" + exerciseNum + lineNumOrWhole + "Mod.mp4";
+            juce::String exerciseNum = juce::String(static_cast<int>(thisComponentView));
+            juce::String videosPath = "Resources/Videos/ex" + exerciseNum + "WholeMod.mp4";
             videoPlayer.setVideoPathAndLoad(videosPath);
         }
         else {
@@ -61,8 +56,18 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
             shutdownAudio();
         }
     }
-    else if (property == userMode) {
+    
+    //return if the tree is not this specific component's scoreState
+    if (tree != scoreState) 
+        return;
 
+    else if (property == userMode) {
+        //the logic for the 2 user modes's logics are handled in Metronome
+        scoreState.setProperty(isVideoPlaying, false, nullptr);
+        scoreState.setProperty(isAnalyzing, false, nullptr);
+        scoreState.setProperty(isMetronomePlaying, false, nullptr);
+        videoPlayer.stopVideo();
+        metronome.reset();
     }
     else if (property == scoreView) {
 
@@ -74,7 +79,16 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
 
     }
     else if (property == tempo) {
+        scoreState.setProperty(isVideoPlaying, false, nullptr);
+        scoreState.setProperty(isAnalyzing, false, nullptr);
+        scoreState.setProperty(isMetronomePlaying, false, nullptr);
+        videoPlayer.stopVideo();
+        metronome.reset();
+        
+        bool fast = int(scoreState.getProperty(tempo)) == 0 ? false : true;
 
+        juce::String videosPath = "Resources/Videos/ex" + std::to_string(exerciseID + 1) + "WholeMod" + (fast ? "F" : "") + ".mp4";
+        videoPlayer.setVideoPathAndLoad(videosPath);
     }
     else if (property == isMetronomePlaying) {
         metronome.reset();

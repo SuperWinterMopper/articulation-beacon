@@ -121,8 +121,15 @@ void Metronome::reset()
 
 void Metronome::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) 
 {
-    if (tree == scoreState && property == scoreView) 
+    //if not scoreState pertaining to this metronome then return (although this shouldn't happen)
+    if (tree != scoreState)
+        return;
+
+    if (property == scoreView) 
         setMetCycleNumBeats();
+    if (property == tempo) {
+        bpm = exerciseTempo[exerciseID][int(scoreState.getProperty(tempo))];
+    }
 }
 
 // Metronome's logic for handling video and analyzing logic for if `userMode` is "Hear than Play"
