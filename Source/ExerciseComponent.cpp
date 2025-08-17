@@ -3,7 +3,7 @@
 
 //==============================================================================
 ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentView, juce::ValueTree a_viewState)
-    : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState)
+    : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState), scoreState(scoreStateIdentifier)
 {
     curView.addListener(this);
     scoreState.addListener(this);
@@ -86,7 +86,6 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
         metronome.reset();
         
         bool fast = int(scoreState.getProperty(tempo)) == 0 ? false : true;
-
         juce::String videosPath = "Resources/Videos/ex" + std::to_string(exerciseID + 1) + "WholeMod" + (fast ? "F" : "") + ".mp4";
         videoPlayer.setVideoPathAndLoad(videosPath);
     }
@@ -136,25 +135,27 @@ void ExerciseComponent::configScoreState() {
 
     scoreState.setProperty(scoreView, "Whole", nullptr);
     scoreState.setProperty(userMode, "Hear then Play", nullptr);
-    scoreState.setProperty(isVideoPlaying, false, nullptr);
     scoreState.setProperty(isAnalyzing, false, nullptr);
     scoreState.setProperty(tempo, 0, nullptr); //starts at slow tempo by default
     scoreState.setProperty(isMetronomePlaying, false, nullptr);
     scoreState.setProperty(isVideoMuted, false, nullptr);
+    scoreState.setProperty(isVideoPlaying, false, nullptr);
 }
 
 void ExerciseComponent::configInputOutput() {
+
+    int inputChannels = 0, outputChannels = 2;
 
     // Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired(juce::RuntimePermissions::recordAudio)
         && !juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio))
     {
         juce::RuntimePermissions::request(juce::RuntimePermissions::recordAudio,
-            [&](bool granted) { setAudioChannels(granted ? 2 : 0, 2); });
+            [&](bool granted) { setAudioChannels(granted ? inputChannels : 0, outputChannels); });
     }
     else
     {
         // Specify the number of input and output channels that we want to open
-        setAudioChannels(2, 2);
+        setAudioChannels(inputChannels, outputChannels);
     }
 }

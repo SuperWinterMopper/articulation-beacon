@@ -21,7 +21,7 @@ void VideoPlayer::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Id
     if (property == isVideoPlaying) {
         //if we're starting to play video
         if ((bool)tree.getProperty(isVideoPlaying) == true) {
-            video.setAudioVolume(defaultAudioLevel);
+            //video.setAudioVolume(defaultAudioLevel);
             video.play();
         }
         else {
@@ -31,6 +31,8 @@ void VideoPlayer::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Id
     }
     if (property == isVideoMuted) {
         //the changed property is whether it's muted, if it is then set audio level to 0.0
+        DBG("valueTreePropertyChanged inside VideoPlayer, isMuted is " << (int)tree.getProperty(isVideoMuted));
+
         if ((bool)tree.getProperty(isVideoMuted) == true) {
             video.setAudioVolume(0.0);
         }

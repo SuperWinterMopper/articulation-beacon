@@ -71,26 +71,26 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
         }
 
         //IMPORTANT: if the beat at 1 (we've finished our 4 clicks in), we start the video to play along with it
-        if (curBeat == 1) {
-            scoreState.setProperty(isVideoPlaying, true, nullptr);
-            scoreState.setProperty(isVideoMuted, false, nullptr);
-        }
-        else if (curBeat == metCycleNumBeats + 1) { //recording has just finished playing, user's turn to play 
+        //if (curBeat == 1) {
+        //    scoreState.setProperty(isVideoPlaying, true, nullptr);
+        //    scoreState.setProperty(isVideoMuted, false, nullptr);
+        //}
+        //else if (curBeat == metCycleNumBeats + 1) { //recording has just finished playing, user's turn to play 
 
-            //this resets the video
-            scoreState.setProperty(isVideoPlaying, false, nullptr);
-            scoreState.setProperty(isVideoPlaying, true, nullptr);
+        //    //this resets the video
+        //    scoreState.setProperty(isVideoPlaying, false, nullptr);
+        //    scoreState.setProperty(isVideoPlaying, true, nullptr);
 
-            //Mute the video and begin analyzing
-            scoreState.setProperty(isAnalyzing, true, nullptr);
-            scoreState.setProperty(isVideoMuted, true, nullptr);
-        }
-        else if (curBeat == metCycleNumBeats * 2 + 1) { //now we've finished 1 listen + play cycle, so reset and do again
-            scoreState.setProperty(isVideoPlaying, false, nullptr);
-            scoreState.setProperty(isVideoMuted, false, nullptr);
-            reset();
-            curBeat = 0; //no 4-beat count in
-        }
+        //    //Mute the video and begin analyzing
+        //    scoreState.setProperty(isAnalyzing, true, nullptr);
+        //    scoreState.setProperty(isVideoMuted, true, nullptr);
+        //}
+        //else if (curBeat == metCycleNumBeats * 2 + 1) { //now we've finished 1 listen + play cycle, so reset and do again
+        //    scoreState.setProperty(isVideoPlaying, false, nullptr);
+        //    scoreState.setProperty(isVideoMuted, false, nullptr);
+        //    reset();
+        //    curBeat = 0; //no 4-beat count in
+        //}
         //====================================
 
         // where, in this block, the click should start
@@ -129,6 +129,7 @@ void Metronome::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Iden
         setMetCycleNumBeats();
     if (property == tempo) {
         bpm = exerciseTempo[exerciseID][int(scoreState.getProperty(tempo))];
+        interval = int(60.0 / bpm * sampleRate);
     }
 }
 
@@ -137,11 +138,10 @@ void Metronome::hearThenPlayControl()
 {
     //IMPORTANT: if the beat at 1 (we've finished our 4 clicks in), we start the video to play along with it
     if (curBeat == 1) {
-        scoreState.setProperty(isVideoPlaying, true, nullptr);
         scoreState.setProperty(isVideoMuted, false, nullptr);
+        scoreState.setProperty(isVideoPlaying, true, nullptr);
     }
     else if (curBeat == metCycleNumBeats + 1) { //recording has just finished playing, user's turn to play 
-
         //this resets the video
         scoreState.setProperty(isVideoPlaying, false, nullptr);
         scoreState.setProperty(isVideoPlaying, true, nullptr);
@@ -151,23 +151,31 @@ void Metronome::hearThenPlayControl()
         scoreState.setProperty(isVideoMuted, true, nullptr);
     }
     else if (curBeat == metCycleNumBeats * 2 + 1) { //now we've finished 1 listen + play cycle, so reset and do again
-        scoreState.setProperty(isVideoPlaying, false, nullptr);
         scoreState.setProperty(isVideoMuted, false, nullptr);
+        scoreState.setProperty(isVideoPlaying, false, nullptr);
         reset();
         curBeat = 0; //no 4-beat count in
     }
 }
 
-void Metronome::playControl()
+void Metronome::playControl() 
 {
+    if (curBeat < 0)
+        scoreState.setProperty(isVideoMuted, false, nullptr);
+
     if (curBeat == 1) {
-        scoreState.setProperty(isVideoPlaying, true, nullptr);
+        DBG("inside playControl, beat 1");
+        DBG("inside playControl beat == 1, videoMuted exists? " << int(scoreState.hasProperty(isVideoMuted)));
+        DBG("inside playControl beat == 1, isAnalyzing exists? " << int(scoreState.hasProperty(isAnalyzing)));
+        DBG("inside playControl beat == 1, isVideoPlaying exists? " << int(scoreState.hasProperty(isVideoPlaying)));
+
         scoreState.setProperty(isVideoMuted, true, nullptr);
         scoreState.setProperty(isAnalyzing, true, nullptr);
+        scoreState.setProperty(isVideoPlaying, true, nullptr);
     }
     else if (curBeat == metCycleNumBeats) {
-        scoreState.setProperty(isVideoPlaying, false, nullptr);
         scoreState.setProperty(isAnalyzing, false, nullptr);
+        scoreState.setProperty(isVideoPlaying, false, nullptr);
         reset();
     }
 }

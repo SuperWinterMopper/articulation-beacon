@@ -244,7 +244,6 @@ void Navbar::configureTempoButton()
             scoreState.setProperty(tempo, int(scoreState.getProperty(tempo)) == 0 ? 1 : 0, nullptr);
 
             int newTempo = exerciseTempo[exerciseNum][int(scoreState.getProperty(tempo))];
-
             tempoButton.setButtonText(std::to_string(newTempo) + "bpm");
         };
 }

@@ -26,7 +26,7 @@ public:
 
 private:
     //scoreState is a crucial ValueTree object that keeps track of the state of the application's metronome, video, DSP, etc
-    juce::ValueTree scoreState{ scoreStateIdentifier };
+    juce::ValueTree scoreState;
 
     //This viewState owned by ExerciseComponent points to the viewState owned by MainComponent.
     //In other words, the viewState here reflects the current view state of the app

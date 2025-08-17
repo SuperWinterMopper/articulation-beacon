@@ -30,7 +30,7 @@ static juce::Identifier scoreStateIdentifier("scoreStateIdentifier");
 static juce::Identifier scoreView("scoreView");
 
 //For scoreState: Exactly either "Hear then Play", or "Play". The logic divergence for this is contained in Metronome.
-static juce::Identifier userMode("scoreView");
+static juce::Identifier userMode("userMode");
 
 //For scoreState: Boolean, if video is actively in playback. DOES NOT correspond to metronome playback
 static juce::Identifier isVideoPlaying("isVideoPlaying");
