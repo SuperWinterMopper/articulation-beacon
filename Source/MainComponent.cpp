@@ -28,7 +28,7 @@ MainComponent::MainComponent()
 
     configInputOutput();
 
-    setSize(1280, 720);
+    setBounds(juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea);
 }
 
 MainComponent::~MainComponent()
@@ -58,7 +58,7 @@ void MainComponent::resized()
     int titleYPadding = 50;
 
     int exerciseSelectXPadding = 200;
-    int exerciseSelectYPadding = 300;
+    int exerciseSelectYPadding = 150;
 
     appTitle.setBounds(titleXPadding, titleYPadding, appTitle.getFont().getStringWidth(appTitle.getText()), appTitle.getFont().getHeight());
     exerciseSelector.setBounds(exerciseSelectXPadding, exerciseSelectYPadding, getWidth() - 2 * exerciseSelectXPadding, getHeight());

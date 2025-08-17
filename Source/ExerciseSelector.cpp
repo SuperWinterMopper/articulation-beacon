@@ -29,9 +29,9 @@ void ExerciseSelector::paint (juce::Graphics& g)
 void ExerciseSelector::resized()
 {
     const int buttonHeight = 50;
-    const int spacing = 20;
-    int y = 0;
+    const int spacing = 10;
 
+    int y = 0;
     for (int i = 0; i < NUM_EXERCISES; i++) {
         juce::TextButton& exerciseButton = exerciseButtons[i];
         exerciseButton.setBounds(0, y, getWidth(), buttonHeight);

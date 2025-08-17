@@ -96,12 +96,6 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
         juce::AudioSourceChannelInfo chunk1{ bufferToFill.buffer, bufferToFill.startSample + clickOffset, chunk1Len };
         metronomeSamplePtr->getNextAudioBlock(chunk1);
 
-        //int remaining = metronomeSampleLength - chunk1Len;
-        //if (remaining > 0) {
-        //    int chunk2Len = std::min(remaining, numSamps);
-        //    juce::AudioSourceChannelInfo chunk2{ bufferToFill.buffer, bufferToFill.startSample, chunk2Len };
-        //    metronomeSamplePtr->getNextAudioBlock(chunk2);
-        //}
         tailSamplesRemaining = metronomeSampleLength - chunk1Len;
     }
 }
