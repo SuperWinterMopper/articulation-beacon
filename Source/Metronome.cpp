@@ -51,14 +51,29 @@ void Metronome::setMetCycleNumBeats()
 void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     const int numSamps = bufferToFill.numSamples;
+
     // how many samples we’d already processed into this beat
     int prevRem = totalSamples % interval;
     totalSamples += numSamps;
+
+    if (tailSamplesRemaining > 0)
+    {
+        const int toWrite = std::min(tailSamplesRemaining, numSamps);
+        juce::AudioSourceChannelInfo tail{ bufferToFill.buffer, bufferToFill.startSample, toWrite };
+        metronomeSamplePtr->getNextAudioBlock(tail);
+        tailSamplesRemaining -= toWrite;
+
+        // if the tail filled the whole block, finished
+        if (toWrite == numSamps)
+            return;
+    }
 
     // did we cross the beat boundary?
     if (prevRem + numSamps >= interval)
     {
         //====================================
+        //IMPORTANT: Metronome logic here
+
         curBeat++; //increment beat
 
         if (scoreState.getProperty(userMode).toString() == "Hear then Play")
@@ -69,6 +84,7 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
             DBG("userMode HAS NOT BEEN SET PROPERLY");
             jassert(false);
         }
+        //====================================
 
         // where, in this block, the click should start
         int clickOffset = interval - prevRem;
@@ -80,12 +96,13 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
         juce::AudioSourceChannelInfo chunk1{ bufferToFill.buffer, bufferToFill.startSample + clickOffset, chunk1Len };
         metronomeSamplePtr->getNextAudioBlock(chunk1);
 
-        int remaining = metronomeSampleLength - chunk1Len;
-        if (remaining > 0) {
-            int chunk2Len = std::min(remaining, numSamps);
-            juce::AudioSourceChannelInfo chunk2{ bufferToFill.buffer, bufferToFill.startSample, chunk2Len };
-            metronomeSamplePtr->getNextAudioBlock(chunk2);
-        }
+        //int remaining = metronomeSampleLength - chunk1Len;
+        //if (remaining > 0) {
+        //    int chunk2Len = std::min(remaining, numSamps);
+        //    juce::AudioSourceChannelInfo chunk2{ bufferToFill.buffer, bufferToFill.startSample, chunk2Len };
+        //    metronomeSamplePtr->getNextAudioBlock(chunk2);
+        //}
+        tailSamplesRemaining = metronomeSampleLength - chunk1Len;
     }
 }
 

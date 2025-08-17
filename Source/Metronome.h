@@ -24,6 +24,8 @@ private:
     int totalSamples{ 0 };
     double sampleRate{ 0 };
 
+    int tailSamplesRemaining = 0;  // how many samples of the click are left to write
+
     //the current count of the metronome in the measure. Metronome always plays 4 beats before starting, hence -4
     int curBeat = -4;
 
