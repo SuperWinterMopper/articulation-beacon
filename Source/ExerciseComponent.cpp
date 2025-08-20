@@ -3,7 +3,7 @@
 
 //==============================================================================
 ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentView, juce::ValueTree a_viewState)
-    : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState), scoreState(scoreStateIdentifier)
+    : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState), scoreState(scoreStateIdentifier), graph(scoreState)
 {
     curView.addListener(this);
     scoreState.addListener(this);
@@ -16,6 +16,7 @@ ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentVi
     navBar.homeButtonClick = [this]() { if (homeButtonClick) homeButtonClick(); };
     addAndMakeVisible(videoPlayer);
     addAndMakeVisible(navBar);
+    addAndMakeVisible(graph);
 }
 
 ExerciseComponent::~ExerciseComponent()
@@ -30,11 +31,15 @@ void ExerciseComponent::resized()
 {
     const int navBarHeight = 100;
     const int videoPaddingX = 100, videoPaddingY = 20;
-    const int videoWidth = getWidth() - 2 * videoPaddingX, videoHeight = navBarHeight * 6;
+    const int videoWidth = getWidth() - 2 * videoPaddingX, videoHeight = navBarHeight * 4;
+
+    const int graphPaddingX = videoPaddingX, graphPaddingY = 40;
+    const int graphWidth = getWidth() - 2 * graphPaddingX, graphHeight = videoHeight;
 
     navBar.setBounds(0, getHeight() - navBarHeight, getWidth(), navBarHeight);
 
     videoPlayer.setBounds(videoPaddingX, getHeight() - navBarHeight - videoHeight - videoPaddingY, videoWidth, videoHeight);
+    graph.setBounds(videoPaddingX, graphPaddingY, graphWidth, graphHeight);
 }
 
 void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) {
@@ -98,12 +103,16 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
 void ExerciseComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     metronome.prepareToPlay(samplesPerBlockExpected, sampleRate);
+    graph.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    bufferToFill.clearActiveBufferRegion();
+    //Perform analysis with Graph
+    graph.getNextAudioBlock(bufferToFill);
 
+    // Write onto bufferToFill with metronome output
+    bufferToFill.clearActiveBufferRegion();
     //keep operating metronome if we're supposed to
     if ( (bool) scoreState.getProperty(isMetronomePlaying) == true)
     {

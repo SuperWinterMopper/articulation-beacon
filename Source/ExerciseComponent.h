@@ -6,6 +6,7 @@
 #include "Metronome.h"
 #include "Utils.h"
 #include "ScoreData.h"
+#include "Graph.h"
 
 //==============================================================================
 class ExerciseComponent : public juce::Component, private juce::ValueTree::Listener
@@ -37,6 +38,7 @@ private:
     VideoPlayer videoPlayer{ scoreState };
     Navbar navBar{scoreState, thisComponentView};
     Metronome metronome {defaultBPM, scoreState, exerciseID };
+    Graph graph;
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
 

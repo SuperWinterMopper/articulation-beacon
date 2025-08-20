@@ -58,7 +58,7 @@ void MainComponent::resized()
     int titleYPadding = 50;
 
     int exerciseSelectXPadding = 200;
-    int exerciseSelectYPadding = 150;
+    int exerciseSelectYPadding = 200;
 
     appTitle.setBounds(titleXPadding, titleYPadding, appTitle.getFont().getStringWidth(appTitle.getText()), appTitle.getFont().getHeight());
     exerciseSelector.setBounds(exerciseSelectXPadding, exerciseSelectYPadding, getWidth() - 2 * exerciseSelectXPadding, getHeight());
@@ -117,8 +117,6 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    bufferToFill.clearActiveBufferRegion();
-
     if (currentExerciseIndex >= 0) {
         exercisesArray[currentExerciseIndex].getNextAudioBlock(bufferToFill);
     }
@@ -132,7 +130,6 @@ void MainComponent::releaseResources()
 
 
 void MainComponent::setUpExerciseComponents() {
-
     for (ExerciseComponent& exComp : exercisesArray)
     {
         //connect homeButtonClick to viewSwitch. not the greatest programming but for now it works
@@ -143,7 +140,7 @@ void MainComponent::setUpExerciseComponents() {
 
 void MainComponent::configInputOutput() {
 
-    int inputChannels = 0, outputChannels = 2;
+    int inputChannels = 2, outputChannels = 2;
 
     // Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired(juce::RuntimePermissions::recordAudio)

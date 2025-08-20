@@ -1,14 +1,14 @@
 #include <JuceHeader.h>
 #include "Graph.h"
 
-Graph::Graph() : fft(fftOrder)
+Graph::Graph(juce::ValueTree scoreState) : fft(fftOrder), scoreState(scoreState)
 {
-
+    scoreState.addListener(this);
 }
 
 Graph::~Graph()
 {
-    shutdownAudio();
+
 }
 
 void Graph::paint (juce::Graphics& g)
@@ -20,8 +20,7 @@ void Graph::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::white);
     g.setFont (juce::FontOptions (14.0f));
-    g.drawText ("Graph", getLocalBounds(),
-                juce::Justification::centred, true);   // draw some placeholder text
+    g.drawText ("Graph", getLocalBounds(), juce::Justification::centred, true);   // draw some placeholder text
 }
 
 void Graph::resized()
@@ -31,7 +30,14 @@ void Graph::resized()
 
 void Graph::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
+    //probably read in precomputed target recording data here
 }
+
+void Graph::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property)
+{
+    DBG("called graph insdie");
+}
+
 
 void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
