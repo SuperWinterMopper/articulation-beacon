@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 
-class Graph : public juce::Component, private juce::ValueTree::Listener
+class Graph : public juce::Component, private juce::ValueTree::Listener, private juce::Timer
 {
 public:
     Graph(juce::ValueTree scoreState);
@@ -17,6 +17,9 @@ public:
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
 
+    void timerCallback() override;
+
+
 private:
     juce::dsp::FFT fft;
     std::array<float, fftSize> fifo;
@@ -27,6 +30,7 @@ private:
     juce::ValueTree scoreState;
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
+    void performAnalysis();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Graph)
 };
