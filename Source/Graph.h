@@ -19,7 +19,6 @@ public:
 
     void timerCallback() override;
 
-
 private:
     juce::dsp::FFT fft;
     std::array<float, fftSize> fifo;
