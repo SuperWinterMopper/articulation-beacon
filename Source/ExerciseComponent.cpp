@@ -3,7 +3,7 @@
 
 //==============================================================================
 ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentView, juce::ValueTree a_viewState)
-    : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState), scoreState(scoreStateIdentifier), graph(scoreState)
+    : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState), scoreState(scoreStateIdentifier), graph(scoreState, exerciseID)
 {
     curView.addListener(this);
     scoreState.addListener(this);

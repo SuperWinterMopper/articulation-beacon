@@ -1,11 +1,13 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "ScoreData.h"
+#include "Utils.h"
 
 class Graph : public juce::Component, private juce::ValueTree::Listener, private juce::Timer
 {
 public:
-    Graph(juce::ValueTree scoreState);
+    Graph(juce::ValueTree scoreState, int exerciseDataIndex);
     ~Graph() override;
 
     void paint (juce::Graphics&) override;
@@ -27,6 +29,15 @@ private:
     bool nextFFTBlockReady = false;
 
     juce::ValueTree scoreState;
+    int exerciseDataIndex;
+    ExerciseDataStruct metaData;
+
+    //===================================
+    // Below are DSP state management variables
+    bool search_sustain = false;
+
+
+    //===================================
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
     void performAnalysis();

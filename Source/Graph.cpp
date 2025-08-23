@@ -1,7 +1,7 @@
 #include <JuceHeader.h>
 #include "Graph.h"
 
-Graph::Graph(juce::ValueTree scoreState) : fft(fftOrder), scoreState(scoreState)
+Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) : fft(fftOrder), scoreState(scoreState), exerciseDataIndex(exerciseDataIndex), metaData(ExerciseData[exerciseDataIndex])
 {
     scoreState.addListener(this);
 
@@ -57,7 +57,7 @@ void Graph::timerCallback() {
 }
 
 void Graph::performAnalysis() {
-
+    fft.performFrequencyOnlyForwardTransform(fftData.data()); //compute FFT
 }
 
 void Graph::resized()
@@ -72,7 +72,11 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 
 void Graph::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property)
 {
-    DBG("called graph insdie");
+    if (tree == scoreState) {
+        if (property == tempo) {
+            metaData = ExerciseData[exerciseDataIndex + (int)scoreState.getProperty(tempo)]; //update metaData if we switch to faster or slower tempo
+        }
+    }
 }
 
 

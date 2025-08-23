@@ -43,7 +43,6 @@ private:
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
 
     void configScoreState();
-    void configInputOutput();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExerciseComponent)
 };
