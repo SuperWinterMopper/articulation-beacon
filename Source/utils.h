@@ -46,3 +46,6 @@ static juce::Identifier isAnalyzing("isAnalyzing");
 
 //For scoreState: Is exactly 0 (slow or default tempo) or 1 (fast tempo) 
 static juce::Identifier tempo("tempo");
+
+//For scoreState: Float, stores the OS starting time of the exercise's playing. When it hasn't started, stores "Unstarted" (for easier debugging, should error when try to subtract)
+static juce::Identifier startTime("time");

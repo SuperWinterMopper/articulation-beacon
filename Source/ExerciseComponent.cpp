@@ -79,7 +79,10 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
         
     }
     else if (property == isAnalyzing) {
-
+        if ( (bool) scoreState.getProperty(isAnalyzing) == true) //we just started analyzing -> Graph should keep track of the time
+            scoreState.setProperty(startTime, (int) juce::Time::getMillisecondCounter(), nullptr);
+        else 
+            scoreState.setProperty(startTime, "Unstarted", nullptr);
     }
     else if (property == tempo) {
         scoreState.setProperty(isVideoPlaying, false, nullptr);
@@ -147,6 +150,7 @@ void ExerciseComponent::configScoreState() {
     scoreState.setProperty(isMetronomePlaying, false, nullptr);
     scoreState.setProperty(isVideoMuted, false, nullptr);
     scoreState.setProperty(isVideoPlaying, false, nullptr);
+    scoreState.setProperty(startTime, "Unstarted", nullptr);
 }
 
 //void ExerciseComponent::configInputOutput() {

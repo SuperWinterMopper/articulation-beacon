@@ -152,11 +152,6 @@ void Metronome::playControl()
         scoreState.setProperty(isVideoMuted, false, nullptr);
 
     if (curBeat == 1) {
-        DBG("inside playControl, beat 1");
-        DBG("inside playControl beat == 1, videoMuted exists? " << int(scoreState.hasProperty(isVideoMuted)));
-        DBG("inside playControl beat == 1, isAnalyzing exists? " << int(scoreState.hasProperty(isAnalyzing)));
-        DBG("inside playControl beat == 1, isVideoPlaying exists? " << int(scoreState.hasProperty(isVideoPlaying)));
-
         scoreState.setProperty(isVideoMuted, true, nullptr);
         scoreState.setProperty(isAnalyzing, true, nullptr);
         scoreState.setProperty(isVideoPlaying, true, nullptr);
