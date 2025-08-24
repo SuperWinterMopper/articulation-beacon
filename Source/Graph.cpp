@@ -53,13 +53,13 @@ void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
         auto* channelData = bufferToFill.buffer->getReadPointer(0, bufferToFill.startSample);
         for (auto i = 0; i < bufferToFill.numSamples; i++) {
             float sample = channelData[i];
-            processSample(sample);
+            processInputSample(sample);
         }
         totalSamplesProcessed += bufferToFill.numSamples;
     }
 }
 
-void Graph::processSample(float sample) {
+void Graph::processInputSample(float sample) {
     fifo[fifoIndex] = sample;
     
     fifoIndex += 1;
@@ -69,8 +69,25 @@ void Graph::processSample(float sample) {
     count += 1;
     if (count == hopLength) {
         count = 0;
-        performAnalysis();
+        //make sure we've saturated our fifo (only guards against the very start)
+        if(totalSamplesProcessed > fftSize) performAnalysis();
     }
+}
+
+bool Graph::processFluxSampleAndIfScan(float sample) {
+    fluxFifo[fluxFifoIndex] = sample;
+
+    fluxFifoIndex += 1;
+    if (fluxFifoIndex == fluxSize)
+        fluxFifoIndex = 0;
+    
+    fluxCount += 1;
+    if (fluxCount == fluxHopLength) {
+        fluxCount = 0;
+        //make sure we've saturated our fluxFifo (only guards against the very start)
+        if (totalSamplesProcessed > fftSize * fluxSize) return true;
+    }
+    return false;
 }
 
 void Graph::performAnalysis() {
@@ -91,12 +108,26 @@ void Graph::performAnalysis() {
         getMagnitudeSpectrogram(fftPtr, newMags.data()); // fill prevMags with magnitude values
         int flux = computeFluxValue(newMags.data(), prevMags.data());
         std::swap(prevMags, newMags);
+
+        bool ifScanFlux = processFluxSampleAndIfScan(flux);
+        if (ifScanFlux) performFluxScan();
     }
     else {
         getMagnitudeSpectrogram(fftPtr, prevMags.data()); // fill prevMags with magnitude values
         prevMagsComputed = true;
     }
 
+}
+
+void Graph::performFluxScan() {
+    //Put fifoFlux data into fluxData
+    const float* fifoPtr = fluxFifo.data();
+    float* dataPtr = fluxData.data();
+    std::memcpy(dataPtr, fifoPtr + fluxFifoIndex, (fluxSize - fluxFifoIndex) * sizeof(float));
+    if (fluxFifoIndex > 0)
+        std::memcpy(dataPtr + fluxSize - fluxFifoIndex, fifoPtr, fluxFifoIndex * sizeof(float));
+
+    
 }
 
 void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {

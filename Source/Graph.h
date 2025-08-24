@@ -21,7 +21,6 @@ public:
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
-    void processSample(float sample);
     void reset();
 
     void timerCallback() override;
@@ -42,15 +41,26 @@ private:
     int exerciseDataIndex;
     ExerciseDataStruct metaData;
     juce::dsp::WindowingFunction<float> hannWindow;
+    juce::dsp::WindowingFunction<float> 
 
     //===================================
-    // Below are DSP state management variables. They are dynamic
+    // Below are DSP state management variables
     int count = 0; //counts up to hopLength to know when next to take FFT
 
     //the previous magnitude spectrogram, used for finding spectral flux.
     std::vector<float> prevMags{ numBins };
     std::vector<float> newMags{ numBins };
     bool prevMagsComputed = false;
+
+
+    //For maintaining flux values
+    static constexpr int fluxOrder = 9;
+    static constexpr int fluxSize = 1 << fluxOrder;
+    static constexpr int fluxHopLength = fluxSize / overlap;
+    std::array<float, fluxSize> fluxFifo;
+    std::array<float, fluxSize> fluxData;
+    int fluxFifoIndex = 0;
+    int fluxCount = 0; //counts up to fluxHopLength to know when to measure the fluxs next
 
     //2 block system containing consecutive 2 fftSize size chunks of amplitudes, spectral flux, and times
     enum class BuffersComputed { Zero, One, Two };
@@ -63,8 +73,12 @@ private:
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
     void getMagnitudeSpectrogram(float* a_fftData, float* res);
+    void processInputSample(float sample);
+    bool processFluxSampleAndIfScan(float sample);
     void performAnalysis();
     float computeFluxValue(float* cur, float* prev);
+    void performFluxScan();
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Graph)
 };
