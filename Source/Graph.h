@@ -58,8 +58,10 @@ private:
     static constexpr int fluxHopLength = fluxSize / overlap;
     std::array<float, fluxSize> fluxFifo;
     std::array<float, fluxSize> fluxData;
-    std::array<int64_t, fluxSize> fluxTimeFifo{};   // absolute sample index (center of FFT window, minus smoothing delay)
-    std::array<int64_t, fluxSize> fluxTimeData{};   // unwrapped times for the scan window
+    std::array<int64_t, fluxSize> fluxTimeFifo;   // absolute sample index (center of FFT window, minus smoothing delay)
+    std::array<int64_t, fluxSize> fluxTimeData;   // unwrapped times for the scan window
+    std::array<float, fluxSize> ampFifo; //amp value for each index in fluxFifo
+    std::array<float, fluxSize> ampData; 
     static constexpr int gaussDelayFrames = GaussianFIR<7>::delay();
 
     int fluxFifoIndex = 0;
@@ -103,12 +105,12 @@ private:
         int sustainSampleIndex = 0; 
         std::vector<float> flux;
         std::vector<float> amps;
-
-        //This denotes how many samples before onset and after sustain we should include. 
-        //Will not always be of this size due to how we analyze the fifo but usually will be this.
-        int detectionPaddingSize = 10;
     };
+    //This denotes how many samples before onset and after sustain we should include. 
+    //Will not always be of this size due to how we analyze the fifo but usually will be this.
+    int detectionPaddingSize = 10;
     std::vector<ArticulationWindow> snapShots;
+    std::unordered_set<int64_t> foundOnsetSamples; //to easily look up if an articulation has been included in snapShots yet
     //===================================
 
     GaussianFIR<7> fluxSmoother{ 1.0f };
@@ -117,12 +119,13 @@ private:
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
     void getMagnitudeSpectrogram(float* a_fftData, float* res);
     void processInputSample(float sample);
-    bool processFluxSampleAndIfScan(float sample);
+    bool processFluxSampleAndIfScan(float rawFlux, float amp);
     void performAnalysis();
     float computeFluxValue(float* cur, float* prev);
     void performFluxScan();
     void copyFluxFifoToData();
     void retrieveMetaData();
+    void sliceCopy(std::vector<float>& dst, std::vector<float>& src, int start, int endExclusive);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Graph)
 };

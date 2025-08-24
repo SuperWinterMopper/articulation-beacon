@@ -83,6 +83,10 @@ void Graph::performAnalysis() {
     std::memcpy(fftPtr, inputPtr + fifoIndex, (fftSize - fifoIndex) * sizeof(float));
     if (fifoIndex > 0) 
         std::memcpy(fftPtr + fftSize - fifoIndex, inputPtr, fifoIndex * sizeof(float));
+
+    float amp = 0.0f;
+    for (int k = 0; k < fftSize; ++k) amp += std::abs(fftPtr[k]);
+    amp /= float(fftSize);
     
     // Apply Hann windowing to avoid spectral leakage.
     hannWindow.multiplyWithWindowingTable(fftPtr, fftSize);
@@ -91,10 +95,10 @@ void Graph::performAnalysis() {
     //Retrieve magnitude spectorgram
     if (prevMagsComputed) {
         getMagnitudeSpectrogram(fftPtr, newMags.data()); // fill prevMags with magnitude values
-        int flux = computeFluxValue(newMags.data(), prevMags.data());
+        float flux = computeFluxValue(newMags.data(), prevMags.data());
         std::swap(prevMags, newMags);
 
-        bool ifScanFlux = processFluxSampleAndIfScan(flux);
+        bool ifScanFlux = processFluxSampleAndIfScan(flux, amp);
         if (ifScanFlux) performFluxScan();
     }
     else {
@@ -103,7 +107,7 @@ void Graph::performAnalysis() {
     }
 }
 
-bool Graph::processFluxSampleAndIfScan(float rawFlux) {
+bool Graph::processFluxSampleAndIfScan(float rawFlux, float amp) {
     // Smooth this single frame
     const float smoothed = fluxSmoother.process(rawFlux);
 
@@ -117,6 +121,8 @@ bool Graph::processFluxSampleAndIfScan(float rawFlux) {
 
     fluxFifo[fluxFifoIndex] = normed;
     fluxTimeFifo[fluxFifoIndex] = totalSamplesProcessed;
+    ampFifo[fluxFifoIndex] = amp;
+
     fluxFifoIndex += 1;
     if (fluxFifoIndex == fluxSize)
         fluxFifoIndex = 0;
@@ -148,12 +154,16 @@ void Graph::performFluxScan() {
             if (snapShots.empty() || (fluxTimeData[i] - snapShots.back().onsetSample) > metaData.minSamplesBetweenNotes) {
                 // Local peak detection
                 if (fluxData[i] > fluxData[i - 1] && fluxData[i] >= fluxData[i + 1] && fluxData[i] > metaData.onsetThresh) {
-                    ArticulationWindow window;
-                    window.onsetSampleIndex = onsetInit;
-                    window.onsetSample = fluxTimeData[onsetInit];
+                    //ensure we haven't pushed this articulation previously
+                    if (!foundOnsetSamples.count(fluxTimeData[onsetInit])) {
+                        foundOnsetSamples.insert(fluxTimeData[onsetInit]);
+                        ArticulationWindow window;
+                        window.onsetSampleIndex = onsetInit;
+                        window.onsetSample = fluxTimeData[onsetInit];
 
-                    snapShots.push_back(window);
-                    searchSustain = true;
+                        snapShots.push_back(window);
+                        searchSustain = true;
+                    }
                 }
             }
         }
@@ -173,6 +183,12 @@ void Graph::performFluxScan() {
                 if (!snapShots.empty()) {
                     snapShots.back().sustainSampleIndex = i;
                     snapShots.back().sustainSample = fluxTimeData[i];
+
+                    //Copy the flux and amp values to this snapShot
+                    const int start = std::max(0, snapShots.back().onsetSampleIndex - detectionPaddingSize);
+                    const int end = std::min<int>(fluxSize, i + detectionPaddingSize);
+                    snapShots.back().flux.assign(fluxData.begin() + start, fluxData.begin() + end);
+                    snapShots.back().amps.assign(ampData.begin() + start, ampData.begin() + end);
                 }
                 searchSustain = false;
             }
@@ -194,6 +210,13 @@ void Graph::copyFluxFifoToData() {
     std::memcpy(tDataPtr, tFifoPtr + fluxFifoIndex, (fluxSize - fluxFifoIndex) * sizeof(int64_t));
     if (fluxFifoIndex > 0)
         std::memcpy(tDataPtr + fluxSize - fluxFifoIndex, tFifoPtr, fluxFifoIndex * sizeof(int64_t));
+
+    //Put ampFifo into ampData
+    const float* src = ampFifo.data();
+    float* dst = ampData.data();
+    std::memcpy(dst, src + fluxFifoIndex, (fluxSize - fluxFifoIndex) * sizeof(float));
+    if (fluxFifoIndex > 0)
+        std::memcpy(dst + fluxSize - fluxFifoIndex, src, fluxFifoIndex * sizeof(float));
 }
 
 void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {
