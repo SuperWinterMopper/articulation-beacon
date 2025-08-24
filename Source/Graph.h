@@ -59,6 +59,11 @@ private:
     static constexpr int fluxHopLength = fluxSize / overlap;
     std::array<float, fluxSize> fluxFifo;
     std::array<float, fluxSize> fluxData;
+    std::array<int64_t, fluxSize> fluxTimeFifo{};   // absolute sample index (center of FFT window, minus smoothing delay)
+    std::array<int64_t, fluxSize> fluxTimeData{};   // unwrapped times for the scan window
+    static constexpr int gaussDelayFrames = GaussianFIR<7>::delay();
+
+
     int fluxFifoIndex = 0;
     int fluxCount = 0; //counts up to fluxHopLength to know when to measure the fluxs next
 
@@ -69,7 +74,6 @@ private:
     std::array<float, fftSize> ampsA, ampsB;
     std::array<float, fftSize> fluxA, fluxB;
     std::array<float, fftSize> timesA, timesB;
-
 
     //for approximating normalization of spectral flux
     struct LeakyMaxNormalizer {

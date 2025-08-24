@@ -55,7 +55,6 @@ void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
             float sample = channelData[i];
             processInputSample(sample);
         }
-        totalSamplesProcessed += bufferToFill.numSamples;
     }
 }
 
@@ -66,6 +65,8 @@ void Graph::processInputSample(float sample) {
     if (fifoIndex == fftSize)
         fifoIndex = 0;
 
+    totalSamplesProcessed += 1;
+
     count += 1;
     if (count == hopLength) {
         count = 0;
@@ -75,15 +76,18 @@ void Graph::processInputSample(float sample) {
 }
 
 bool Graph::processFluxSampleAndIfScan(float rawFlux) {
-
     // Smooth this single frame
     const float smoothed = fluxSmoother.process(rawFlux);
 
     // Normalize with leaky-max (once per frame)
     const float normed = norm.update(smoothed);
 
-    fluxFifo[fluxFifoIndex] = normed;
+    int64_t centerSample = (totalSamplesProcessed - 1) - (fftSize - 1) / 2;
+    int64_t adjustedSample = centerSample - (int64_t)gaussDelayFrames * hopLength;
 
+    if (adjustedSample < 0) adjustedSample = 0; // adjust to clamp during warm-up
+
+    fluxFifo[fluxFifoIndex] = normed;
     fluxFifoIndex += 1;
     if (fluxFifoIndex == fluxSize)
         fluxFifoIndex = 0;
@@ -123,7 +127,6 @@ void Graph::performAnalysis() {
         getMagnitudeSpectrogram(fftPtr, prevMags.data()); // fill prevMags with magnitude values
         prevMagsComputed = true;
     }
-
 }
 
 void Graph::performFluxScan() {
@@ -134,8 +137,14 @@ void Graph::performFluxScan() {
     if (fluxFifoIndex > 0)
         std::memcpy(dataPtr + fluxSize - fluxFifoIndex, fifoPtr, fluxFifoIndex * sizeof(float));
 
+    //Put data into fluxTimeData
+    const int64_t* tFifoPtr = fluxTimeFifo.data();
+    int64_t* tDataPtr = fluxTimeData.data();
+    std::memcpy(tDataPtr, tFifoPtr + fluxFifoIndex, (fluxSize - fluxFifoIndex) * sizeof(int64_t));
+    if (fluxFifoIndex > 0)
+        std::memcpy(tDataPtr + fluxSize - fluxFifoIndex, tFifoPtr, fluxFifoIndex * sizeof(int64_t));
 
-
+    //IMMEDIATE NEXT STEP: now we should have time and spectral flux data. we can now do the scan and update variables, push onsets, etc
 }
 
 void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {
