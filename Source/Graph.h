@@ -34,7 +34,7 @@ private:
     int fifoIndex = 0;
     bool nextFFTBlockReady = false;
     
-    int sampleRate;
+    static int sampleRate;
     int64_t totalSamplesProcessed = 0;
     float secondsPerSample;
     
@@ -52,7 +52,6 @@ private:
     std::vector<float> newMags{ numBins };
     bool prevMagsComputed = false;
 
-
     //For maintaining flux values
     static constexpr int fluxOrder = 9;
     static constexpr int fluxSize = 1 << fluxOrder;
@@ -63,21 +62,22 @@ private:
     std::array<int64_t, fluxSize> fluxTimeData{};   // unwrapped times for the scan window
     static constexpr int gaussDelayFrames = GaussianFIR<7>::delay();
 
-
     int fluxFifoIndex = 0;
     int fluxCount = 0; //counts up to fluxHopLength to know when to measure the fluxs next
 
-    //2 block system containing consecutive 2 fftSize size chunks of amplitudes, spectral flux, and times
-    enum class BuffersComputed { Zero, One, Two };
-    BuffersComputed buffersComputed = BuffersComputed::Zero;
-    float startA, endA, startB, endB;
-    std::array<float, fftSize> ampsA, ampsB;
-    std::array<float, fftSize> fluxA, fluxB;
-    std::array<float, fftSize> timesA, timesB;
+    //Optimized metadata for this articulation exercise
+    struct MetaData {
+        float onsetThresh = 1.0f;
+        int bpm = -1;
+        float minSecondsBetweenNotes = 100.0f;
+        int64_t minSamplesBetweenNotes = minSecondsBetweenNotes * sampleRate;
+        float sustainThresholdValue = -1.0f;
+    };
+    MetaData metaData;
 
     //for approximating normalization of spectral flux
     struct LeakyMaxNormalizer {
-        float sampleRate = 44100.f;
+        float sampleRate = sampleRate;
         int   hopLength = 512;     // flux step in samples
         float tauSeconds = 20.f;
         float headroom = 10.f;    // matches optimal peak ~0.10 -> headroom=10
@@ -95,6 +95,20 @@ private:
         void reset(float g0 = 1e-3f) { g = g0; }
     };
     LeakyMaxNormalizer norm;
+
+    struct ArticulationWindow {
+        int64_t onsetSample = 0;
+        int onsetSampleIndex = 0;
+        int64_t sustainSample = 0;
+        int sustainSampleIndex = 0; 
+        std::vector<float> flux;
+        std::vector<float> amps;
+
+        //This denotes how many samples before onset and after sustain we should include. 
+        //Will not always be of this size due to how we analyze the fifo but usually will be this.
+        int detectionPaddingSize = 10;
+    };
+    std::vector<ArticulationWindow> snapShots;
     //===================================
 
     GaussianFIR<7> fluxSmoother{ 1.0f };
@@ -107,7 +121,8 @@ private:
     void performAnalysis();
     float computeFluxValue(float* cur, float* prev);
     void performFluxScan();
-
+    void copyFluxFifoToData();
+    void retrieveMetaData() {
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Graph)
 };

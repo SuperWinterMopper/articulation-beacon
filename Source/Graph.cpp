@@ -75,32 +75,6 @@ void Graph::processInputSample(float sample) {
     }
 }
 
-bool Graph::processFluxSampleAndIfScan(float rawFlux) {
-    // Smooth this single frame
-    const float smoothed = fluxSmoother.process(rawFlux);
-
-    // Normalize with leaky-max (once per frame)
-    const float normed = norm.update(smoothed);
-
-    int64_t centerSample = (totalSamplesProcessed - 1) - (fftSize - 1) / 2;
-    int64_t adjustedSample = centerSample - (int64_t)gaussDelayFrames * hopLength;
-
-    if (adjustedSample < 0) adjustedSample = 0; // adjust to clamp during warm-up
-
-    fluxFifo[fluxFifoIndex] = normed;
-    fluxFifoIndex += 1;
-    if (fluxFifoIndex == fluxSize)
-        fluxFifoIndex = 0;
-    
-    fluxCount += 1;
-    if (fluxCount == fluxHopLength) {
-        fluxCount = 0;
-        //make sure we've saturated our fluxFifo (only guards against the very start)
-        if (totalSamplesProcessed > fftSize * fluxSize) return true;
-    }
-    return false;
-}
-
 void Graph::performAnalysis() {
 
     //Copy data from fifo to fftData
@@ -129,7 +103,84 @@ void Graph::performAnalysis() {
     }
 }
 
+bool Graph::processFluxSampleAndIfScan(float rawFlux) {
+    // Smooth this single frame
+    const float smoothed = fluxSmoother.process(rawFlux);
+
+    // Normalize with leaky-max (once per frame)
+    const float normed = norm.update(smoothed);
+
+    int64_t centerSample = (totalSamplesProcessed - 1) - (fftSize - 1) / 2;
+    int64_t adjustedSample = centerSample - (int64_t)gaussDelayFrames * hopLength;
+
+    if (adjustedSample < 0) adjustedSample = 0; // adjust to clamp during warm-up
+
+    fluxFifo[fluxFifoIndex] = normed;
+    fluxTimeFifo[fluxFifoIndex] = totalSamplesProcessed;
+    fluxFifoIndex += 1;
+    if (fluxFifoIndex == fluxSize)
+        fluxFifoIndex = 0;
+    
+    fluxCount += 1;
+    if (fluxCount == fluxHopLength) {
+        fluxCount = 0;
+        //make sure we've saturated our fluxFifo (only guards against the very start)
+        if (totalSamplesProcessed > fftSize * fluxSize) return true;
+    }
+    return false;
+}
+
 void Graph::performFluxScan() {
+    //Make fluxData [0... fluxSize - 1] of flux values, similar for fluxTimeData 
+    copyFluxFifoToData();
+
+    //Initially we are searching for next ONSET, not sustain yet
+    bool searchSustain = false;
+    int onsetInit = 0;
+
+    for (int i = 1; i < fluxSize - 1; i++) {
+       
+        // Track when we drop below threshold (potential onset start)
+        if (fluxData[i] < metaData.onsetThresh) onsetInit = i;
+
+        if (!searchSustain) {
+            // Ensure enough time since last onset
+            if (snapShots.empty() || (fluxTimeData[i] - snapShots.back().onsetSample) > metaData.minSamplesBetweenNotes) {
+                // Local peak detection
+                if (fluxData[i] > fluxData[i - 1] && fluxData[i] >= fluxData[i + 1] && fluxData[i] > metaData.onsetThresh) {
+                    ArticulationWindow window;
+                    window.onsetSampleIndex = onsetInit;
+                    window.onsetSample = fluxTimeData[onsetInit];
+
+                    snapShots.push_back(window);
+                    searchSustain = true;
+                }
+            }
+        }
+        else {
+            // Look ahead window 
+            int end = std::min(i + (int)minSamplesBetweenNotes, fluxSize);
+            double avg = 0.0;
+            int count = 0;
+            for (int j = i; j < end; j++) {
+                avg += fluxData[j];
+                count++;
+            }
+            avg /= std::max(1, count);
+
+            if (avg < metaData.sustainThresholdValue) {
+                // Register sustain
+                if (!snapShots.empty()) {
+                    snapShots.back().sustainSampleIndex = i;
+                    snapShots.back().sustainSample = fluxTimeData[i];
+                }
+                searchSustain = false;
+            }
+        }
+    }
+}
+
+void Graph::copyFluxFifoToData() {
     //Put fifoFlux data into fluxData
     const float* fifoPtr = fluxFifo.data();
     float* dataPtr = fluxData.data();
@@ -143,8 +194,6 @@ void Graph::performFluxScan() {
     std::memcpy(tDataPtr, tFifoPtr + fluxFifoIndex, (fluxSize - fluxFifoIndex) * sizeof(int64_t));
     if (fluxFifoIndex > 0)
         std::memcpy(tDataPtr + fluxSize - fluxFifoIndex, tFifoPtr, fluxFifoIndex * sizeof(int64_t));
-
-    //IMMEDIATE NEXT STEP: now we should have time and spectral flux data. we can now do the scan and update variables, push onsets, etc
 }
 
 void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {
@@ -189,6 +238,11 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
         freqBins[i] = i * binSpacing;
     
     fluxSmoother.reset();
+    retrieveMetaData();
+}
+
+void Graph::retrieveMetaData() {
+    jassert(false);
 }
 
 void Graph::releaseResources()
