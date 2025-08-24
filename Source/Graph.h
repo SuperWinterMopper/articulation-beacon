@@ -70,14 +70,14 @@ private:
         float onsetThresh = 1.0f;
         int bpm = -1;
         float minSecondsBetweenNotes = 100.0f;
-        int64_t minSamplesBetweenNotes = minSecondsBetweenNotes * sampleRate;
+        int64_t minSamplesBetweenNotes = 0; // will be set later
         float sustainThresholdValue = -1.0f;
     };
     MetaData metaData;
 
     //for approximating normalization of spectral flux
     struct LeakyMaxNormalizer {
-        float sampleRate = sampleRate;
+        float sampleRate = 0;
         int   hopLength = 512;     // flux step in samples
         float tauSeconds = 20.f;
         float headroom = 10.f;    // matches optimal peak ~0.10 -> headroom=10
@@ -122,7 +122,7 @@ private:
     float computeFluxValue(float* cur, float* prev);
     void performFluxScan();
     void copyFluxFifoToData();
-    void retrieveMetaData() {
+    void retrieveMetaData();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Graph)
 };

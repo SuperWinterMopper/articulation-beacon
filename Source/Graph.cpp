@@ -159,7 +159,7 @@ void Graph::performFluxScan() {
         }
         else {
             // Look ahead window 
-            int end = std::min(i + (int)minSamplesBetweenNotes, fluxSize);
+            int end = std::min(i + (int) metaData.minSamplesBetweenNotes, fluxSize);
             double avg = 0.0;
             int count = 0;
             for (int j = i; j < end; j++) {
@@ -237,11 +237,13 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
     for (int i = 0; i < fftSize; i++) 
         freqBins[i] = i * binSpacing;
     
+    norm.sampleRate = sampleRate;
     fluxSmoother.reset();
     retrieveMetaData();
 }
 
 void Graph::retrieveMetaData() {
+    metaData.minSamplesBetweenNotes = static_cast<int64_t>(metaData.minSecondsBetweenNotes * sampleRate);
     jassert(false);
 }
 
