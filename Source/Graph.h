@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "ScoreData.h"
 #include "Utils.h"
+#include "GaussianSmoother.h"
 
 class Graph : public juce::Component, private juce::ValueTree::Listener, private juce::Timer
 {
@@ -41,7 +42,6 @@ private:
     int exerciseDataIndex;
     ExerciseDataStruct metaData;
     juce::dsp::WindowingFunction<float> hannWindow;
-    juce::dsp::WindowingFunction<float> 
 
     //===================================
     // Below are DSP state management variables
@@ -69,7 +69,32 @@ private:
     std::array<float, fftSize> ampsA, ampsB;
     std::array<float, fftSize> fluxA, fluxB;
     std::array<float, fftSize> timesA, timesB;
+
+
+    //for approximating normalization of spectral flux
+    struct LeakyMaxNormalizer {
+        float sampleRate = 44100.f;
+        int   hopLength = 512;     // flux step in samples
+        float tauSeconds = 20.f;
+        float headroom = 10.f;    // matches optimal peak ~0.10 -> headroom=10
+        float eps = 1e-6f;
+        float g = 1e-3f;
+
+        // Call once per spectral-flux value. Returns normalized flux in [~0..1].
+        float update(float x) {
+            const float dt = hopLength / sampleRate;
+            const float a = std::exp(-dt / tauSeconds);   // 0<a<1
+            g = std::max(x, g * a);
+            return x / (headroom * g + eps);
+        }
+
+        void reset(float g0 = 1e-3f) { g = g0; }
+    };
+    LeakyMaxNormalizer norm;
     //===================================
+
+    GaussianFIR<7> fluxSmoother{ 1.0f };
+
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
     void getMagnitudeSpectrogram(float* a_fftData, float* res);

@@ -74,8 +74,15 @@ void Graph::processInputSample(float sample) {
     }
 }
 
-bool Graph::processFluxSampleAndIfScan(float sample) {
-    fluxFifo[fluxFifoIndex] = sample;
+bool Graph::processFluxSampleAndIfScan(float rawFlux) {
+
+    // Smooth this single frame
+    const float smoothed = fluxSmoother.process(rawFlux);
+
+    // Normalize with leaky-max (once per frame)
+    const float normed = norm.update(smoothed);
+
+    fluxFifo[fluxFifoIndex] = normed;
 
     fluxFifoIndex += 1;
     if (fluxFifoIndex == fluxSize)
@@ -127,16 +134,14 @@ void Graph::performFluxScan() {
     if (fluxFifoIndex > 0)
         std::memcpy(dataPtr + fluxSize - fluxFifoIndex, fifoPtr, fluxFifoIndex * sizeof(float));
 
-    
+
+
 }
 
 void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {
     //recast to complex numbers
-    auto* cdata = reinterpret_cast<std::complex<float>*>(a_fftData);
-    for (int i = 0; i < numBins; i++) {
-        float mag = std::abs(cdata[i]); //absolute value 
-        res[i] = mag;
-    }
+    for (int i = 0; i < numBins; i++) 
+        res[i] = a_fftData[i];
 }
 
 float Graph::computeFluxValue(float* cur, float* prev) {
@@ -173,6 +178,8 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
     double binSpacing = (double) sampleRate / fftSize;
     for (int i = 0; i < fftSize; i++) 
         freqBins[i] = i * binSpacing;
+    
+    fluxSmoother.reset();
 }
 
 void Graph::releaseResources()
@@ -187,4 +194,5 @@ void Graph::reset() {
     fifoIndex = 0;
     count = 0;
     std::fill(fifo.begin(), fifo.end(), 0.0f);
+    fluxSmoother.reset();
 }
