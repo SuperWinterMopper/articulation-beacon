@@ -32,11 +32,12 @@ void Graph::paint (juce::Graphics& g)
 }
 
 void Graph::timerCallback() {
-    if (nextFFTBlockReady) //false for now, but in future have a bool which indicates an articulation has been found, all computation are done, ready to show the graph
-    {
-        performAnalysis();
-        nextFFTBlockReady = false;
-        repaint(); //this is to show the potentially rendered graph
+    for (auto& i : foundOnsetSamples) {
+        if (!renderedSnapShots.count(i)) { //if we have yet to render it
+            renderSnapShotGraph(i);
+            repaint(); //this is to show the potentially rendered graph
+        }
+
     }
 }
 
@@ -76,17 +77,12 @@ void Graph::processInputSample(float sample) {
 }
 
 void Graph::performAnalysis() {
-
     //Copy data from fifo to fftData
     const float* inputPtr = fifo.data();
     float* fftPtr = fftData.data();
     std::memcpy(fftPtr, inputPtr + fifoIndex, (fftSize - fifoIndex) * sizeof(float));
     if (fifoIndex > 0) 
         std::memcpy(fftPtr + fftSize - fifoIndex, inputPtr, fifoIndex * sizeof(float));
-
-    float amp = 0.0f;
-    for (int k = 0; k < fftSize; ++k) amp += std::abs(fftPtr[k]);
-    amp /= float(fftSize);
     
     // Apply Hann windowing to avoid spectral leakage.
     hannWindow.multiplyWithWindowingTable(fftPtr, fftSize);
@@ -97,6 +93,11 @@ void Graph::performAnalysis() {
         getMagnitudeSpectrogram(fftPtr, newMags.data()); // fill prevMags with magnitude values
         float flux = computeFluxValue(newMags.data(), prevMags.data());
         std::swap(prevMags, newMags);
+
+        //retrieve amplitude value for this flux time frame window
+        float amp = 0.0f;
+        for (int k = 0; k < fftSize; ++k) amp += std::abs(inputPtr[k]);
+        amp /= float(fftSize);
 
         bool ifScanFlux = processFluxSampleAndIfScan(flux, amp);
         if (ifScanFlux) performFluxScan();
@@ -120,7 +121,7 @@ bool Graph::processFluxSampleAndIfScan(float rawFlux, float amp) {
     if (adjustedSample < 0) adjustedSample = 0; // adjust to clamp during warm-up
 
     fluxFifo[fluxFifoIndex] = normed;
-    fluxTimeFifo[fluxFifoIndex] = totalSamplesProcessed;
+    fluxTimeFifo[fluxFifoIndex] = adjustedSample;
     ampFifo[fluxFifoIndex] = amp;
 
     fluxFifoIndex += 1;
@@ -145,7 +146,6 @@ void Graph::performFluxScan() {
     int onsetInit = 0;
 
     for (int i = 1; i < fluxSize - 1; i++) {
-       
         // Track when we drop below threshold (potential onset start)
         if (fluxData[i] < metaData.onsetThresh) onsetInit = i;
 
@@ -156,7 +156,6 @@ void Graph::performFluxScan() {
                 if (fluxData[i] > fluxData[i - 1] && fluxData[i] >= fluxData[i + 1] && fluxData[i] > metaData.onsetThresh) {
                     //ensure we haven't pushed this articulation previously
                     if (!foundOnsetSamples.count(fluxTimeData[onsetInit])) {
-                        foundOnsetSamples.insert(fluxTimeData[onsetInit]);
                         ArticulationWindow window;
                         window.onsetSampleIndex = onsetInit;
                         window.onsetSample = fluxTimeData[onsetInit];
@@ -189,6 +188,8 @@ void Graph::performFluxScan() {
                     const int end = std::min<int>(fluxSize, i + detectionPaddingSize);
                     snapShots.back().flux.assign(fluxData.begin() + start, fluxData.begin() + end);
                     snapShots.back().amps.assign(ampData.begin() + start, ampData.begin() + end);
+                    
+                    foundOnsetSamples.insert(snapShots.back().onsetSample);
                 }
                 searchSustain = false;
             }
@@ -232,20 +233,41 @@ float Graph::computeFluxValue(float* cur, float* prev) {
     return ret;
 }
 
+void Graph::renderSnapShotGraph(int64_t onsetSample) {
+    ArticulationWindow* snapShot = nullptr; //the snapShot to render's index in snapShots
+    for (auto& i : snapShots) {
+        if (i.onsetSample == onsetSample)
+            snapShot = &i;
+    }
+    jassert(snapShot != nullptr);
+
+    //to do: render graph of user articulation + match to closest in target recording
+    //for now let's just make sure note onset detection works
+    DBG("***************** NOTE ONSET DETECTED. GRAPH WILL DISPLAY FOR THAT ARTICULATION. ***********************");
+}
+
 void Graph::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property)
 {
     if (tree == scoreState) {
         if (property == tempo) {
-            metaData = ExerciseData[exerciseDataIndex + (int)scoreState.getProperty(tempo)]; //update metaData if we switch to faster or slower tempo
+            reset();
         }
         if (property == isAnalyzing) {
+            reset(); 
             totalSamplesProcessed = 0; //whenever change state in analysis status reset totalSamplesProcessed to 0
         }
     }
 }
 
-void Graph::resized()
-{
+void Graph::updateMetaData() {
+    ExerciseDataStruct data = ExerciseData[exerciseDataIndex + (int)scoreState.getProperty(tempo)]; //update metaData if we switch to faster or slower tempo
+    metaData.onsetThresh = data.onset_thresh;
+    metaData.bpm = data.bpm;
+    metaData.minSsecond
+
+}
+
+void Graph::resized() {
 
 }
 
@@ -265,6 +287,14 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
     retrieveMetaData();
 }
 
+void Graph::reset() {
+    fifoIndex = 0;
+    count = 0;
+    std::fill(fifo.begin(), fifo.end(), 0.0f);
+    fluxSmoother.reset();
+
+}
+
 void Graph::retrieveMetaData() {
     metaData.minSamplesBetweenNotes = static_cast<int64_t>(metaData.minSecondsBetweenNotes * sampleRate);
     jassert(false);
@@ -276,11 +306,4 @@ void Graph::releaseResources()
     // restarted due to a setting change.
 
     // For more details, see the help for AudioProcessor::releaseResources()
-}
-
-void Graph::reset() {
-    fifoIndex = 0;
-    count = 0;
-    std::fill(fifo.begin(), fifo.end(), 0.0f);
-    fluxSmoother.reset();
 }

@@ -27,24 +27,25 @@ public:
     void timerCallback() override;
 
 private:
-    juce::dsp::FFT fft;
-    std::array<float, fftSize> fifo;
-    std::array<float, fftSize * 2> fftData;
-    std::array<float, fftSize> freqBins;
-    int fifoIndex = 0;
-    bool nextFFTBlockReady = false;
-    
-    static int sampleRate;
-    int64_t totalSamplesProcessed = 0;
-    float secondsPerSample;
-    
     juce::ValueTree scoreState;
     int exerciseDataIndex;
     ExerciseDataStruct metaData;
     juce::dsp::WindowingFunction<float> hannWindow;
 
+    //Graph properties
+    int renderWidthInPixels = 1 << 10;
+
     //===================================
     // Below are DSP state management variables
+    juce::dsp::FFT fft;
+    std::array<float, fftSize> fifo;
+    std::array<float, fftSize * 2> fftData;
+    std::array<float, fftSize> freqBins;
+    int fifoIndex = 0;
+    
+    static int sampleRate;
+    int64_t totalSamplesProcessed = 0;
+    float secondsPerSample;
     int count = 0; //counts up to hopLength to know when next to take FFT
 
     //the previous magnitude spectrogram, used for finding spectral flux.
@@ -66,6 +67,9 @@ private:
 
     int fluxFifoIndex = 0;
     int fluxCount = 0; //counts up to fluxHopLength to know when to measure the fluxs next
+
+    //Gaussian smoother
+    GaussianFIR<7> fluxSmoother{ 1.0f };
 
     //Optimized metadata for this articulation exercise
     struct MetaData {
@@ -111,10 +115,8 @@ private:
     int detectionPaddingSize = 10;
     std::vector<ArticulationWindow> snapShots;
     std::unordered_set<int64_t> foundOnsetSamples; //to easily look up if an articulation has been included in snapShots yet
+    std::unordered_set<int64_t> renderedSnapShots;
     //===================================
-
-    GaussianFIR<7> fluxSmoother{ 1.0f };
-
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
     void getMagnitudeSpectrogram(float* a_fftData, float* res);
@@ -125,7 +127,8 @@ private:
     void performFluxScan();
     void copyFluxFifoToData();
     void retrieveMetaData();
-    void sliceCopy(std::vector<float>& dst, std::vector<float>& src, int start, int endExclusive);
+    void renderSnapShotGraph(int64_t onsetSample);
+    void updateMetaData();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Graph)
 };
