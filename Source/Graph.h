@@ -29,7 +29,6 @@ public:
 private:
     juce::ValueTree scoreState;
     int exerciseDataIndex;
-    ExerciseDataStruct metaData;
     juce::dsp::WindowingFunction<float> hannWindow;
 
     //Graph properties
@@ -40,7 +39,7 @@ private:
     juce::dsp::FFT fft;
     std::array<float, fftSize> fifo;
     std::array<float, fftSize * 2> fftData;
-    std::array<float, fftSize> freqBins;
+    //std::array<float, fftSize> freqBins;
     int fifoIndex = 0;
     
     static int sampleRate;
@@ -78,6 +77,7 @@ private:
         float minSecondsBetweenNotes = 100.0f;
         int64_t minSamplesBetweenNotes = 0; // will be set later
         float sustainThresholdValue = -1.0f;
+        int minFramesBetweenNotes = 0; // NEW: same interval, but in flux frames
     };
     MetaData metaData;
 
@@ -126,7 +126,6 @@ private:
     float computeFluxValue(float* cur, float* prev);
     void performFluxScan();
     void copyFluxFifoToData();
-    void retrieveMetaData();
     void renderSnapShotGraph(int64_t onsetSample);
     void updateMetaData();
 

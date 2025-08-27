@@ -5,7 +5,6 @@ Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) :
     fft(fftOrder), 
     scoreState(scoreState), 
     exerciseDataIndex(exerciseDataIndex), 
-    metaData(ExerciseData[exerciseDataIndex]),
     hannWindow(fftSize + 1, juce::dsp::WindowingFunction<float>::WindowingMethod::hann, false)
 {
     scoreState.addListener(this);
@@ -83,7 +82,11 @@ void Graph::performAnalysis() {
     std::memcpy(fftPtr, inputPtr + fifoIndex, (fftSize - fifoIndex) * sizeof(float));
     if (fifoIndex > 0) 
         std::memcpy(fftPtr + fftSize - fifoIndex, inputPtr, fifoIndex * sizeof(float));
+    std::fill(fftPtr + fftSize, fftPtr + 2 * fftSize, 0.0f); //zero out the upper half
     
+    float amp = 0.0f;
+    for (int k = 0; k < fftSize; ++k) amp += std::abs(fftPtr[k]);
+    amp /= float(fftSize);
     // Apply Hann windowing to avoid spectral leakage.
     hannWindow.multiplyWithWindowingTable(fftPtr, fftSize);
     fft.performFrequencyOnlyForwardTransform(fftData.data(), true); //compute FFT of only magnitude values
@@ -95,9 +98,6 @@ void Graph::performAnalysis() {
         std::swap(prevMags, newMags);
 
         //retrieve amplitude value for this flux time frame window
-        float amp = 0.0f;
-        for (int k = 0; k < fftSize; ++k) amp += std::abs(inputPtr[k]);
-        amp /= float(fftSize);
 
         bool ifScanFlux = processFluxSampleAndIfScan(flux, amp);
         if (ifScanFlux) performFluxScan();
@@ -132,7 +132,7 @@ bool Graph::processFluxSampleAndIfScan(float rawFlux, float amp) {
     if (fluxCount == fluxHopLength) {
         fluxCount = 0;
         //make sure we've saturated our fluxFifo (only guards against the very start)
-        if (totalSamplesProcessed > fftSize * fluxSize) return true;
+        if (totalSamplesProcessed > fluxSize * hopLength) return true;
     }
     return false;
 }
@@ -168,7 +168,7 @@ void Graph::performFluxScan() {
         }
         else {
             // Look ahead window 
-            int end = std::min(i + (int) metaData.minSamplesBetweenNotes, fluxSize);
+            int end = std::min(i + (int) metaData.minFramesBetweenNotes, fluxSize);
             double avg = 0.0;
             int count = 0;
             for (int j = i; j < end; j++) {
@@ -249,22 +249,12 @@ void Graph::renderSnapShotGraph(int64_t onsetSample) {
 void Graph::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property)
 {
     if (tree == scoreState) {
-        if (property == tempo) {
+        if (property == tempo) 
             reset();
-        }
-        if (property == isAnalyzing) {
+        
+        if (property == isAnalyzing) 
             reset(); 
-            totalSamplesProcessed = 0; //whenever change state in analysis status reset totalSamplesProcessed to 0
-        }
     }
-}
-
-void Graph::updateMetaData() {
-    ExerciseDataStruct data = ExerciseData[exerciseDataIndex + (int)scoreState.getProperty(tempo)]; //update metaData if we switch to faster or slower tempo
-    metaData.onsetThresh = data.onset_thresh;
-    metaData.bpm = data.bpm;
-    metaData.minSsecond
-
 }
 
 void Graph::resized() {
@@ -276,28 +266,46 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
     //probably read in precomputed target recording data here
     sampleRate = sr;
     secondsPerSample = 1.0 / sampleRate;
-
-    //initialize frequency bins:
-    double binSpacing = (double) sampleRate / fftSize;
-    for (int i = 0; i < fftSize; i++) 
-        freqBins[i] = i * binSpacing;
-    
     norm.sampleRate = sampleRate;
-    fluxSmoother.reset();
-    retrieveMetaData();
+    norm.hopLength = hopLength;
+
+    reset();
+
+    ////initialize frequency bins:
+    //double binSpacing = (double) sampleRate / fftSize;
+    //for (int i = 0; i < fftSize; i++) 
+    //    freqBins[i] = i * binSpacing;
+}
+
+void Graph::updateMetaData() {
+    ExerciseDataStruct data = ExerciseData[exerciseDataIndex + (int)scoreState.getProperty(tempo)]; //update metaData if we switch to faster or slower tempo
+    metaData.onsetThresh = data.onset_thresh;
+    metaData.bpm = data.bpm;
+    metaData.sustainThresholdValue = data.sustain_thresh;
+    metaData.minSecondsBetweenNotes = data.min_time_between;
+    metaData.minSamplesBetweenNotes = static_cast<int64_t>(metaData.minSecondsBetweenNotes * sampleRate);
+    metaData.minFramesBetweenNotes = static_cast<int>((metaData.minSamplesBetweenNotes + hopLength / 2) / hopLength);
 }
 
 void Graph::reset() {
     fifoIndex = 0;
     count = 0;
+    totalSamplesProcessed = 0;
     std::fill(fifo.begin(), fifo.end(), 0.0f);
+    std::fill(fftData.begin(), fftData.end(), 0.0f);
+    std::fill(fftData.begin(), fftData.end(), 0.0f);
     fluxSmoother.reset();
-
-}
-
-void Graph::retrieveMetaData() {
-    metaData.minSamplesBetweenNotes = static_cast<int64_t>(metaData.minSecondsBetweenNotes * sampleRate);
-    jassert(false);
+    prevMagsComputed = false;
+    std::fill(prevMags.begin(), prevMags.end(), 0.0f);
+    std::fill(newMags.begin(), newMags.end(), 0.0f);
+    fluxFifoIndex = 0;
+    fluxCount = 0; 
+    updateMetaData();
+    fluxSmoother.reset();
+    snapShots.clear();
+    foundOnsetSamples.clear();
+    renderedSnapShots.clear();
+    norm.reset();
 }
 
 void Graph::releaseResources()
