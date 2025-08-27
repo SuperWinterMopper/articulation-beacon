@@ -109,11 +109,13 @@ private:
         int sustainSampleIndex = 0; 
         std::vector<float> flux;
         std::vector<float> amps;
+        std::vector<float> cents;  // this is added but not used yet
     };
     //This denotes how many samples before onset and after sustain we should include. 
     //Will not always be of this size due to how we analyze the fifo but usually will be this.
     int detectionPaddingSize = 10;
     std::vector<ArticulationWindow> snapShots;
+    std::vector<ArticulationWindow> targetArticulations;
     std::unordered_set<int64_t> foundOnsetSamples; //to easily look up if an articulation has been included in snapShots yet
     std::unordered_set<int64_t> renderedSnapShots;
     //===================================
@@ -128,6 +130,10 @@ private:
     void copyFluxFifoToData();
     void renderSnapShotGraph(int64_t onsetSample);
     void updateMetaData();
+
+    //for reading in binary data
+    bool loadTargetPack(const juce::File& packDir, int exerciseIndex);
+    static bool readFloatSlice(juce::FileInputStream& s, int64_t floatOffset, int64_t floatLen, std::vector<float>& out);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Graph)
 };

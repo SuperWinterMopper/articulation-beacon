@@ -275,6 +275,12 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
     //double binSpacing = (double) sampleRate / fftSize;
     //for (int i = 0; i < fftSize; i++) 
     //    freqBins[i] = i * binSpacing;
+
+    juce::File binFolder = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory().getChildFile("precomputed_target_bin");
+    if (!binFolder.existsAsFile()) 
+        jassert(false);
+
+    (void)loadTargetPack(binFolder, exerciseDataIndex);
 }
 
 void Graph::updateMetaData() {
@@ -314,4 +320,161 @@ void Graph::releaseResources()
     // restarted due to a setting change.
 
     // For more details, see the help for AudioProcessor::releaseResources()
+}
+
+// Helper: robustly read little-endian float32 slice by element offset/length
+bool Graph::readFloatSlice(juce::FileInputStream& s,
+    int64_t floatOffset,
+    int64_t floatLen,
+    std::vector<float>& out)
+{
+    if (!s.openedOk() || floatOffset < 0 || floatLen <= 0)
+        return false;
+
+    const int64_t bytePos = floatOffset * (int64_t)sizeof(float);
+    const int64_t byteSize = floatLen * (int64_t)sizeof(float);
+    const int64_t totalLen = s.getTotalLength();
+
+    if (bytePos < 0 || byteSize <= 0 || bytePos + byteSize > totalLen)
+        return false;
+
+    if (!s.setPosition(bytePos))
+        return false;
+
+    out.resize((size_t)floatLen);
+
+    // Read in a loop; InputStream::read can return fewer bytes than requested.
+    auto* dst = reinterpret_cast<char*>(out.data());
+    int64_t remaining = byteSize;
+    while (remaining > 0)
+    {
+        const int chunkReq = (int)juce::jmin<int64_t>(remaining, 1 << 20); // up to 1MB chunks
+        const int got = s.read(dst, chunkReq);
+        if (got <= 0) return false;
+        dst += got;
+        remaining -= got;
+    }
+
+    // Files were written as little-endian float32 by Python.
+    // On x86/arm64 (LE) this is native; add byteswap here only if you ever target big-endian.
+    return true;
+}
+
+static inline int64_t asI64(const juce::var& v)
+{
+    // Numbers from juce::JSON::parse are doubles; round to nearest and cast.
+    return (int64_t)juce::roundToInt((double)v);
+}
+
+bool Graph::loadTargetPack(const juce::File& packDir, int exerciseIndex)
+{
+    const juce::File manifestFile = packDir.getChildFile("pack.json");
+    if (!manifestFile.existsAsFile())
+    {
+        DBG("pack.json not found: " + packDir.getFullPathName());
+        return false;
+    }
+
+    const juce::String jsonText = manifestFile.loadFileAsString();
+    juce::var manifest = juce::JSON::parse(jsonText);
+    if (manifest.isVoid() || !manifest.isObject())
+    {
+        DBG("Invalid pack.json");
+        return false;
+    }
+    auto* m = manifest.getDynamicObject();
+    if (m == nullptr) return false;
+
+    // Resolve binary names and (optional) dtype
+    juce::String ampsRel, centsRel, ampsDType, centsDType;
+    if (auto ampsVar = m->getProperty("amps"); ampsVar.isObject())
+    {
+        if (auto* a = ampsVar.getDynamicObject())
+        {
+            ampsRel = a->getProperty("file").toString();
+            ampsDType = a->getProperty("dtype").toString();
+        }
+    }
+    if (auto centsVar = m->getProperty("cents"); centsVar.isObject())
+    {
+        if (auto* c = centsVar.getDynamicObject())
+        {
+            centsRel = c->getProperty("file").toString();
+            centsDType = c->getProperty("dtype").toString();
+        }
+    }
+    if (ampsRel.isEmpty() || centsRel.isEmpty())
+    {
+        DBG("pack.json missing amps/cents file names");
+        return false;
+    }
+    // Optional: sanity check dtype
+    if (!ampsDType.isEmpty() && ampsDType != "float32") DBG("Warning: amps dtype != float32");
+    if (!centsDType.isEmpty() && centsDType != "float32") DBG("Warning: cents dtype != float32");
+
+    // Open streams once; we’ll seek for each slice
+    juce::FileInputStream ampsStream(packDir.getChildFile(ampsRel));
+    juce::FileInputStream centsStream(packDir.getChildFile(centsRel));
+    if (!ampsStream.openedOk() || !centsStream.openedOk())
+    {
+        DBG("Failed to open .f32 files");
+        return false;
+    }
+
+    // Pick exercise
+    auto exsVar = m->getProperty("exercises");
+    if (!exsVar.isArray()) { DBG("pack.json: exercises is not an array"); return false; }
+    auto* exs = exsVar.getArray();
+    if (exerciseIndex < 0 || exerciseIndex >= exs->size())
+    {
+        DBG("exerciseIndex out of range");
+        return false;
+    }
+
+    auto exVar = (*exs)[exerciseIndex];
+    if (!exVar.isObject()) { DBG("exercise entry not an object"); return false; }
+    auto* ex = exVar.getDynamicObject();
+
+    auto artsVar = ex->getProperty("articulations");
+    if (!artsVar.isArray()) { DBG("exercise.articulations is not an array"); return false; }
+    auto* arts = artsVar.getArray();
+
+    targetArticulations.clear();
+    targetArticulations.reserve((size_t)arts->size());
+
+    for (const auto& aVar : *arts)
+    {
+        if (!aVar.isObject()) continue;
+        auto* a = aVar.getDynamicObject();
+
+        const double onsetSec = (double)a->getProperty("onset_time");
+        const double sustainSec = (double)a->getProperty("sustain_time");
+        const int64_t  ampOff = asI64(a->getProperty("amp_off"));
+        const int64_t  ampLen = asI64(a->getProperty("amp_len"));
+        const int64_t  centOff = asI64(a->getProperty("cent_off"));
+        const int64_t  centLen = asI64(a->getProperty("cent_len"));
+
+        ArticulationWindow w{};
+        // sampleRate must already be set in prepareToPlay
+        w.onsetSample = (int64_t)std::llround(onsetSec * (double)sampleRate);
+        w.sustainSample = (int64_t)std::llround(sustainSec * (double)sampleRate);
+        w.onsetSampleIndex = 0;
+        w.sustainSampleIndex = 0;
+
+        if (!readFloatSlice(ampsStream, ampOff, ampLen, w.amps)) { DBG("Failed reading amp slice");  return false; }
+        if (!readFloatSlice(centsStream, centOff, centLen, w.cents)) { DBG("Failed reading cent slice"); return false; }
+
+        // If lengths ever differ, clamp to the shorter (defensive)
+        if (w.amps.size() != w.cents.size())
+        {
+            const auto n = (size_t)juce::jmin(w.amps.size(), w.cents.size());
+            w.amps.resize(n);
+            w.cents.resize(n);
+        }
+
+        targetArticulations.push_back(std::move(w));
+    }
+
+    DBG("Loaded target articulations: " + juce::String((int)targetArticulations.size()));
+    return true;
 }
