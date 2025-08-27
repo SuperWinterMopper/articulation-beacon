@@ -4,6 +4,7 @@
 #include "ScoreData.h"
 #include "Utils.h"
 #include "GaussianSmoother.h"
+#include "TargetPack.h"
 
 class Graph : public juce::Component, private juce::ValueTree::Listener, private juce::Timer
 {
@@ -132,8 +133,7 @@ private:
     void updateMetaData();
 
     //for reading in binary data
-    bool loadTargetPack(const juce::File& packDir, int exerciseIndex);
-    static bool readFloatSlice(juce::FileInputStream& s, int64_t floatOffset, int64_t floatLen, std::vector<float>& out);
+    void loadTargetPack();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Graph)
 };
