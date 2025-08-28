@@ -112,7 +112,7 @@ void ExerciseComponent::prepareToPlay(int samplesPerBlockExpected, double sample
 void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     //Perform analysis with Graph
-    // graph.getNextAudioBlock(bufferToFill);
+    graph.getNextAudioBlock(bufferToFill);
 
     // Write onto bufferToFill with metronome output
     bufferToFill.clearActiveBufferRegion();

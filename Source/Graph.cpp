@@ -19,6 +19,7 @@ Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) :
 
 Graph::~Graph()
 {
+    stopTimer();
     scoreState.removeListener(this);
 }
 
@@ -44,17 +45,18 @@ void Graph::timerCallback() {
     //     }
     
     // }
-    
+    jassert(snapShots.size() == abstractFifoCapacity);
+
     int s1, n1, s2, n2;
     
     //read as many as possible from the queue. shouldn't be more than a few, probably much less
     abstractArtEventFifo.prepareToRead(abstractArtEventFifo.getNumReady(), s1, n1, s2, n2);
-    for(int i = 0; i < n1; i++) renderSnapShotGraph( &snapShots[s1 + i]);
-    for(int i = 0; i < n2; i++) renderSnapShotGraph( &snapShots[s2 + i]);
+    for(int i = 0; i < n1; i++) renderSnapShotGraph( snapShots[s1 + i]);
+    for(int i = 0; i < n2; i++) renderSnapShotGraph( snapShots[s2 + i]);
     abstractArtEventFifo.finishedRead(n1 + n2);
 }
 
-void Graph::renderSnapShotGraph(ArticulationWindow* window) {
+void Graph::renderSnapShotGraph(const ArticulationWindow& window) {
     //to do: render graph of user articulation + match to closest in target recording
     //for now let's just make sure note onset detection works
     DBG("***************** NOTE ONSET DETECTED. GRAPH WILL DISPLAY FOR THAT ARTICULATION. ***********************");
@@ -64,6 +66,7 @@ void Graph::renderSnapShotGraph(ArticulationWindow* window) {
 
 void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
+    // DBG("getNextAudioBlock of Graph.cpp called");
     if (!scoreState.hasProperty(isAnalyzing))
         DBG("ISSUE: in Graph.cpp isAnalyzing not yet set even though component initialized ");
     //don't do anything if we aren't analyzing yet
@@ -84,9 +87,8 @@ void Graph::processInputSample(float sample) {
     fifo[fifoIndex] = sample;
     
     fifoIndex += 1;
-    if (fifoIndex == fftSize)
-        fifoIndex = 0;
-
+    if (fifoIndex == fftSize) fifoIndex = 0;
+    
     totalSamplesProcessed += 1;
 
     count += 1;
@@ -98,6 +100,7 @@ void Graph::processInputSample(float sample) {
 }
 
 void Graph::performAnalysis() {
+    DBG("Perfoming 1 analysis at " << (totalSamplesProcessed / sampleRate) << " seconds");
     //Copy data from fifo to fftData
     const float* inputPtr = fifo.data();
     float* fftPtr = fftData.data();
@@ -332,10 +335,15 @@ void Graph::reset() {
     std::fill(ampData.begin(), ampData.end(), 0.0);
     updateMetaData();
     fluxSmoother.reset();
-    snapShots.clear();
     foundOnsetSamples.clear();
     norm.reset();
-    snapShots.resize(abstractFifoCapacity);
+
+    abstractArtEventFifo.reset();
+    havePending = false;
+    lastOnsetCooldownAnchor = -1;
+    pending = {};
+    for (auto& w : snapShots) w = ArticulationWindow{};
+    if (snapShots.size() != abstractFifoCapacity) snapShots.resize(abstractFifoCapacity);
 
 }
 
@@ -378,57 +386,3 @@ void Graph::loadTargetPack() {
         targetArticulations.clear();
     }
 }
-
-// // ======= Minimal event helpers =======
-// void Graph::enqueueArtEvent(int onsetIdx, int sustainIdx)
-// {
-//     // Bounds guard; cast to unsigned avoids negative comparisons UB
-//     if ((unsigned)onsetIdx >= (unsigned)fluxSize || (unsigned)sustainIdx >= (unsigned)fluxSize)
-//         return;
-
-//     int start1 = 0, size1 = 0, start2 = 0, size2 = 0;
-//     eventFifo.prepareToWrite(1, start1, size1, start2, size2);
-//     if (size1 > 0) {
-//         auto& ev = eventBuf[start1];
-//         ev.onsetIdx      = onsetIdx;
-//         ev.sustainIdx    = sustainIdx;
-//         ev.onsetSample   = fluxTimeData[onsetIdx];   // your existing timestamp array
-//         ev.sustainSample = fluxTimeData[sustainIdx];
-
-//         lastEnqueuedOnsetSample = ev.onsetSample;    // optional spacing guard
-//         eventFifo.finishedWrite(1);
-//     }
-//     // else: queue full -> drop (never block audio thread)
-// }
-
-// bool Graph::drainArtEventsOnUI()
-// {
-//     int start1 = 0, size1 = 0, start2 = 0, size2 = 0;
-//     eventFifo.prepareToRead(kEventCapacity, start1, size1, start2, size2);
-
-//     if (size1 + size2 == 0)
-//         return false;
-
-//     auto process = [&](int start, int size)
-//     {
-//         for (int i = 0; i < size; ++i)
-//         {
-//             const auto& ev = eventBuf[(start + i) % kEventCapacity];
-
-//             ArticulationWindow w;
-//             w.onsetSampleIndex   = ev.onsetIdx;
-//             w.onsetSample        = ev.onsetSample;
-//             w.sustainSampleIndex = ev.sustainIdx;
-//             w.sustainSample      = ev.sustainSample;
-
-//             snapShots.push_back(std::move(w));
-//             // (optional) if you maintain a de-dup set:
-//             // foundOnsetSamples.insert(ev.onsetSample);
-//         }
-//     };
-
-//     process(start1, size1);
-//     process(start2, size2);
-//     eventFifo.finishedRead(size1 + size2);
-//     return true;
-// }

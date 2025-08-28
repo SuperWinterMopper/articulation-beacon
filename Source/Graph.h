@@ -146,9 +146,8 @@ private:
     void performFluxScan();
     void copyFluxFifoToData();
     void updateMetaData();
-    void renderSnapShotGraph(ArticulationWindow* window);
+    void renderSnapShotGraph(const ArticulationWindow& window);
     void writeToAbstractArtEventFifo(ArticulationWindow* pending);
-
 
     //for reading in binary data
     void loadTargetPack();
