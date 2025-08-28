@@ -10,11 +10,18 @@ Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) :
     scoreState.addListener(this);
 
     startTimerHz(60); //this timer will be called every ~16ms and will trigger graph computation and rendering
+
+    //reserve memory
+    snapShots.reserve(256); 
+    foundOnsetSamples.reserve(512);
+    renderedSnapShots.reserve(512);
+
+    int y = 10;
 }
 
 Graph::~Graph()
 {
-
+    scoreState.removeListener(this);
 }
 
 
@@ -34,6 +41,7 @@ void Graph::timerCallback() {
     for (auto& i : foundOnsetSamples) {
         if (!renderedSnapShots.count(i)) { //if we have yet to render it
             renderSnapShotGraph(i);
+            renderedSnapShots.insert(i);
             repaint(); //this is to show the potentially rendered graph
         }
 
@@ -264,7 +272,7 @@ void Graph::resized() {
 void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
 {
     //probably read in precomputed target recording data here
-    sampleRate = sr;
+    this->sampleRate = sr;
     secondsPerSample = 1.0 / sampleRate;
     norm.sampleRate = sampleRate;
     norm.hopLength = hopLength;
@@ -295,13 +303,20 @@ void Graph::reset() {
     totalSamplesProcessed = 0;
     std::fill(fifo.begin(), fifo.end(), 0.0f);
     std::fill(fftData.begin(), fftData.end(), 0.0f);
-    std::fill(fftData.begin(), fftData.end(), 0.0f);
     fluxSmoother.reset();
     prevMagsComputed = false;
     std::fill(prevMags.begin(), prevMags.end(), 0.0f);
     std::fill(newMags.begin(), newMags.end(), 0.0f);
+
     fluxFifoIndex = 0;
     fluxCount = 0; 
+    std::fill(fluxFifo.begin(), fluxFifo.end(), 0.0f);
+    std::fill(ampFifo.begin(), ampFifo.end(), 0.0f);
+    std::fill(fluxTimeData.begin(), fluxTimeData.end(), 0.0);
+    std::fill(fluxData.begin(), fluxData.end(), 0.0);
+    std::fill(fluxTimeFifo.begin(), fluxTimeFifo.end(), 0.0);
+    std::fill(fluxTimeData.begin(), fluxTimeData.end(), 0.0);
+    std::fill(ampData.begin(), ampData.end(), 0.0);
     updateMetaData();
     fluxSmoother.reset();
     snapShots.clear();
@@ -320,9 +335,11 @@ void Graph::releaseResources()
 
 //note this must be called after `prepareToPlay`, since it needs sampleRate to be known
 void Graph::loadTargetPack() {
-    juce::File binFolder = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory().getChildFile("precomputed_target_bin");
-    if (!binFolder.existsAsFile())
+    juce::File binFolder = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory().getChildFile("Resources/precomputed_target_bin");
+    if (!binFolder.isDirectory()) {
+        DBG("ERROR: CAN;T FIND BINARY FILES AT " << binFolder.getFullPathName());
         jassert(false);
+    }
 
 
     std::vector<targetpack::TargetArticulation> temp;

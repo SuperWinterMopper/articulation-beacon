@@ -38,7 +38,7 @@ namespace targetpack
     static inline int64_t asI64(const juce::var& v)
     {
         // JSON numbers are doubles in JUCE; round to nearest integer.
-        return (int64_t)juce::roundToInt64((double)v);
+        return (int64_t)juce::roundToInt((double)v);
     }
 
     juce::Result loadExercise(const juce::File& packDir,

@@ -43,7 +43,7 @@ private:
     //std::array<float, fftSize> freqBins;
     int fifoIndex = 0;
     
-    static int sampleRate;
+    double sampleRate = 0.0;
     int64_t totalSamplesProcessed = 0;
     float secondsPerSample;
     int count = 0; //counts up to hopLength to know when next to take FFT
