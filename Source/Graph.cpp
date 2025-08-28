@@ -117,15 +117,19 @@ void Graph::performAnalysis() {
     fft.performFrequencyOnlyForwardTransform(fftData.data(), true); //compute FFT of only magnitude values
 
     //Retrieve magnitude spectorgram
+
     if (prevMagsComputed) {
         getMagnitudeSpectrogram(fftPtr, newMags.data()); // fill prevMags with magnitude values
+
         float flux = computeFluxValue(newMags.data(), prevMags.data());
+        if (false) { //IMMEDIATE NEXT STEP: seems computeFluxValue or swap is causing nullptr read or something. confusing. I added a jassert in computeFluxValue so try that ouit. actually the jassert triggered wtf invesigate that 
         std::swap(prevMags, newMags);
 
         //retrieve amplitude value for this flux time frame window
 
-        bool ifScanFlux = processFluxSampleAndIfScan(flux, amp);
-        if (ifScanFlux) performFluxScan();
+            bool ifScanFlux = processFluxSampleAndIfScan(flux, amp);
+            if (ifScanFlux) performFluxScan();
+        }
     }
     else {
         getMagnitudeSpectrogram(fftPtr, prevMags.data()); // fill prevMags with magnitude values
@@ -258,12 +262,13 @@ void Graph::copyFluxFifoToData() {
 }
 
 void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {
-    //recast to complex numbers
     for (int i = 0; i < numBins; i++) 
         res[i] = a_fftData[i];
 }
 
 float Graph::computeFluxValue(float* cur, float* prev) {
+    jassert((int)prevMags.size() == numBins && (int)newMags.size() == numBins);
+
     float ret = 0;
     for (int i = 0; i < numBins; i++)
         ret += std::max(cur[i] - prev[i], 0.0f); //half wave rectify
