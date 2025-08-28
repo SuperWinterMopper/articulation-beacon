@@ -115,10 +115,26 @@ private:
     //This denotes how many samples before onset and after sustain we should include. 
     //Will not always be of this size due to how we analyze the fifo but usually will be this.
     int detectionPaddingSize = 10;
-    std::vector<ArticulationWindow> snapShots;
     std::vector<ArticulationWindow> targetArticulations;
-    std::unordered_set<int64_t> foundOnsetSamples; //to easily look up if an articulation has been included in snapShots yet
-    std::unordered_set<int64_t> renderedSnapShots;
+
+
+    //NOTE: abstractFifoCapacity is intended to be larger than the maximum number of articulations throughout exercise. We rely on this with our pointer reading in timerCallBack()
+    static constexpr int abstractFifoCapacity = 1 << 10;
+    juce::AbstractFifo abstractArtEventFifo{abstractFifoCapacity};
+    std::vector<ArticulationWindow> snapShots;
+
+
+
+    //audio thread only
+    ArticulationWindow pending;
+    bool havePending = false;
+
+    // audio thread only. the totalSamplesProcessed value, ie the corresponding onsetSample, of the lastmost detected onset. 
+    int64_t lastOnsetCooldownAnchor = -1;
+
+    //audio thread only. to easily look up if an articulation has been included in snapShots yet
+    std::unordered_set<int64_t> foundOnsetSamples; 
+
     //===================================
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
@@ -129,8 +145,10 @@ private:
     float computeFluxValue(float* cur, float* prev);
     void performFluxScan();
     void copyFluxFifoToData();
-    void renderSnapShotGraph(int64_t onsetSample);
     void updateMetaData();
+    void renderSnapShotGraph(ArticulationWindow* window);
+    void writeToAbstractArtEventFifo(ArticulationWindow* pending);
+
 
     //for reading in binary data
     void loadTargetPack();

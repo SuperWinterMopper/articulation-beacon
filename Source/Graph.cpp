@@ -11,12 +11,10 @@ Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) :
 
     startTimerHz(60); //this timer will be called every ~16ms and will trigger graph computation and rendering
 
-    //reserve memory
-    snapShots.reserve(256); 
-    foundOnsetSamples.reserve(512);
-    renderedSnapShots.reserve(512);
+    //reserve memory. snapShots.resize because compiler is shitty and can't parse normal size
+    snapShots.resize(abstractFifoCapacity);
+    foundOnsetSamples.reserve(abstractFifoCapacity);
 
-    int y = 10;
 }
 
 Graph::~Graph()
@@ -28,25 +26,41 @@ Graph::~Graph()
 void Graph::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
-
+    
     g.setColour (juce::Colours::grey);
     g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
+    
     g.setColour (juce::Colours::white);
     g.setFont (juce::FontOptions (14.0f));
     g.drawText ("Graph", getLocalBounds(), juce::Justification::centred, true);   // draw some placeholder text
 }
 
 void Graph::timerCallback() {
-    for (auto& i : foundOnsetSamples) {
-        if (!renderedSnapShots.count(i)) { //if we have yet to render it
-            renderSnapShotGraph(i);
-            renderedSnapShots.insert(i);
-            repaint(); //this is to show the potentially rendered graph
-        }
-
-    }
+    // for (auto& i : foundOnsetSamples) {
+    //     if (!renderedSnapShots.count(i)) { //if we have yet to render it
+    //         renderSnapShotGraph(i);
+    //         renderedSnapShots.insert(i);
+    //         repaint(); //this is to show the potentially rendered graph
+    //     }
+    
+    // }
+    
+    int s1, n1, s2, n2;
+    
+    //read as many as possible from the queue. shouldn't be more than a few, probably much less
+    abstractArtEventFifo.prepareToRead(abstractArtEventFifo.getNumReady(), s1, n1, s2, n2);
+    for(int i = 0; i < n1; i++) renderSnapShotGraph( &snapShots[s1 + i]);
+    for(int i = 0; i < n2; i++) renderSnapShotGraph( &snapShots[s2 + i]);
+    abstractArtEventFifo.finishedRead(n1 + n2);
 }
+
+void Graph::renderSnapShotGraph(ArticulationWindow* window) {
+    //to do: render graph of user articulation + match to closest in target recording
+    //for now let's just make sure note onset detection works
+    DBG("***************** NOTE ONSET DETECTED. GRAPH WILL DISPLAY FOR THAT ARTICULATION. ***********************");
+    repaint();
+}
+
 
 void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
@@ -149,27 +163,30 @@ void Graph::performFluxScan() {
     //Make fluxData [0... fluxSize - 1] of flux values, similar for fluxTimeData 
     copyFluxFifoToData();
 
-    //Initially we are searching for next ONSET, not sustain yet
-    bool searchSustain = false;
     int onsetInit = 0;
 
     for (int i = 1; i < fluxSize - 1; i++) {
         // Track when we drop below threshold (potential onset start)
         if (fluxData[i] < metaData.onsetThresh) onsetInit = i;
 
-        if (!searchSustain) {
+        if (!havePending) {
             // Ensure enough time since last onset
-            if (snapShots.empty() || (fluxTimeData[i] - snapShots.back().onsetSample) > metaData.minSamplesBetweenNotes) {
+            if (fluxTimeData[i] - lastOnsetCooldownAnchor > metaData.minSamplesBetweenNotes) {
                 // Local peak detection
                 if (fluxData[i] > fluxData[i - 1] && fluxData[i] >= fluxData[i + 1] && fluxData[i] > metaData.onsetThresh) {
+                    const int64_t onsetSample = fluxTimeData[onsetInit];
                     //ensure we haven't pushed this articulation previously
-                    if (!foundOnsetSamples.count(fluxTimeData[onsetInit])) {
-                        ArticulationWindow window;
-                        window.onsetSampleIndex = onsetInit;
-                        window.onsetSample = fluxTimeData[onsetInit];
+                    if (!foundOnsetSamples.count(onsetSample)) {
+                        pending = {}; //reset this
+                        pending.onsetSample = onsetSample;
+                        pending.onsetSampleIndex = onsetInit;
+                        havePending = true;
 
-                        snapShots.push_back(window);
-                        searchSustain = true;
+                        // ArticulationWindow window;
+                        // window.onsetSampleIndex = onsetInit;
+                        // window.onsetSample = onsetSample;
+
+                        // snapShots.push_back(window);
                     }
                 }
             }
@@ -187,22 +204,31 @@ void Graph::performFluxScan() {
 
             if (avg < metaData.sustainThresholdValue) {
                 // Register sustain
-                if (!snapShots.empty()) {
-                    snapShots.back().sustainSampleIndex = i;
-                    snapShots.back().sustainSample = fluxTimeData[i];
-
-                    //Copy the flux and amp values to this snapShot
-                    const int start = std::max(0, snapShots.back().onsetSampleIndex - detectionPaddingSize);
-                    const int end = std::min<int>(fluxSize, i + detectionPaddingSize);
-                    snapShots.back().flux.assign(fluxData.begin() + start, fluxData.begin() + end);
-                    snapShots.back().amps.assign(ampData.begin() + start, ampData.begin() + end);
-                    
-                    foundOnsetSamples.insert(snapShots.back().onsetSample);
-                }
-                searchSustain = false;
+                pending.sustainSample = fluxTimeData[i];
+                pending.sustainSampleIndex = i;
+                const int start = std::max(0, pending.onsetSampleIndex - detectionPaddingSize);
+                const int end = std::min<int>(fluxSize, i + detectionPaddingSize);
+                pending.flux.assign(fluxData.begin() + start, fluxData.begin() + end);
+                pending.amps.assign(ampData.begin() + start, ampData.begin() + end);
+                
+                foundOnsetSamples.insert(pending.onsetSample);
+                lastOnsetCooldownAnchor = pending.onsetSample; // to enforce min time between notes
+                
+                //write to our abstractfifo
+                writeToAbstractArtEventFifo(&pending);
+                havePending = false;
             }
         }
     }
+}
+
+void Graph::writeToAbstractArtEventFifo(ArticulationWindow* pending) {
+    int s1, n1, s2, n2;
+    abstractArtEventFifo.prepareToWrite(1, s1, n1, s2, n2);
+    if (n1 > 0) snapShots[s1] = std::move(*pending);
+    else if (n2 > 0) snapShots[s2] = std::move(*pending);
+
+    abstractArtEventFifo.finishedWrite((n1 + n2) > 0 ? 1 : 0);
 }
 
 void Graph::copyFluxFifoToData() {
@@ -239,19 +265,6 @@ float Graph::computeFluxValue(float* cur, float* prev) {
     for (int i = 0; i < numBins; i++)
         ret += std::max(cur[i] - prev[i], 0.0f); //half wave rectify
     return ret;
-}
-
-void Graph::renderSnapShotGraph(int64_t onsetSample) {
-    ArticulationWindow* snapShot = nullptr; //the snapShot to render's index in snapShots
-    for (auto& i : snapShots) {
-        if (i.onsetSample == onsetSample)
-            snapShot = &i;
-    }
-    jassert(snapShot != nullptr);
-
-    //to do: render graph of user articulation + match to closest in target recording
-    //for now let's just make sure note onset detection works
-    DBG("***************** NOTE ONSET DETECTED. GRAPH WILL DISPLAY FOR THAT ARTICULATION. ***********************");
 }
 
 void Graph::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property)
@@ -321,8 +334,9 @@ void Graph::reset() {
     fluxSmoother.reset();
     snapShots.clear();
     foundOnsetSamples.clear();
-    renderedSnapShots.clear();
     norm.reset();
+    snapShots.resize(abstractFifoCapacity);
+
 }
 
 void Graph::releaseResources()
@@ -364,3 +378,57 @@ void Graph::loadTargetPack() {
         targetArticulations.clear();
     }
 }
+
+// // ======= Minimal event helpers =======
+// void Graph::enqueueArtEvent(int onsetIdx, int sustainIdx)
+// {
+//     // Bounds guard; cast to unsigned avoids negative comparisons UB
+//     if ((unsigned)onsetIdx >= (unsigned)fluxSize || (unsigned)sustainIdx >= (unsigned)fluxSize)
+//         return;
+
+//     int start1 = 0, size1 = 0, start2 = 0, size2 = 0;
+//     eventFifo.prepareToWrite(1, start1, size1, start2, size2);
+//     if (size1 > 0) {
+//         auto& ev = eventBuf[start1];
+//         ev.onsetIdx      = onsetIdx;
+//         ev.sustainIdx    = sustainIdx;
+//         ev.onsetSample   = fluxTimeData[onsetIdx];   // your existing timestamp array
+//         ev.sustainSample = fluxTimeData[sustainIdx];
+
+//         lastEnqueuedOnsetSample = ev.onsetSample;    // optional spacing guard
+//         eventFifo.finishedWrite(1);
+//     }
+//     // else: queue full -> drop (never block audio thread)
+// }
+
+// bool Graph::drainArtEventsOnUI()
+// {
+//     int start1 = 0, size1 = 0, start2 = 0, size2 = 0;
+//     eventFifo.prepareToRead(kEventCapacity, start1, size1, start2, size2);
+
+//     if (size1 + size2 == 0)
+//         return false;
+
+//     auto process = [&](int start, int size)
+//     {
+//         for (int i = 0; i < size; ++i)
+//         {
+//             const auto& ev = eventBuf[(start + i) % kEventCapacity];
+
+//             ArticulationWindow w;
+//             w.onsetSampleIndex   = ev.onsetIdx;
+//             w.onsetSample        = ev.onsetSample;
+//             w.sustainSampleIndex = ev.sustainIdx;
+//             w.sustainSample      = ev.sustainSample;
+
+//             snapShots.push_back(std::move(w));
+//             // (optional) if you maintain a de-dup set:
+//             // foundOnsetSamples.insert(ev.onsetSample);
+//         }
+//     };
+
+//     process(start1, size1);
+//     process(start2, size2);
+//     eventFifo.finishedRead(size1 + size2);
+//     return true;
+// }
