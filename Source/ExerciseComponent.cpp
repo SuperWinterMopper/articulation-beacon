@@ -21,6 +21,12 @@ ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentVi
 
 ExerciseComponent::~ExerciseComponent()
 {
+    videoPlayer.stopVideo();
+    metronome.reset();
+
+    // Remove listeners we added in the ctor
+    curView.removeListener(this);
+    scoreState.removeListener(this);
 }
 
 void ExerciseComponent::paint (juce::Graphics& g) {    
@@ -148,12 +154,9 @@ void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bu
 
 void ExerciseComponent::releaseResources()
 {
-    // This will be called when the audio device stops, or when it is being
-    // restarted due to a setting change.
-
-    // For more details, see the help for AudioProcessor::releaseResources()
+    metronome.reset();
+    graph.releaseResources();
 }
-
 
 void ExerciseComponent::configScoreState() {
     if (exerciseID < 0 || exerciseID >= exerciseTempo.size()) {

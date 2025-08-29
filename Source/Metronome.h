@@ -10,7 +10,7 @@
 class Metronome : private juce::ValueTree::Listener
 {
 public:
-    Metronome(int bpm, juce::ValueTree a_scoreState, int a_exerciseID);
+    Metronome(int bpm, juce::ValueTree a_scoreState, int a_exerciseID, bool metByPass);
 
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill, int channel);
     void reset();
@@ -37,6 +37,8 @@ private:
     int metronomeSampleLength = 0;
 
     int exerciseID = 0;
+
+    bool metByPass;
 
     juce::ValueTree scoreState;
 

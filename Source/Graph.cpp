@@ -24,7 +24,6 @@ Graph::~Graph()
     scoreState.removeListener(this);
 }
 
-
 void Graph::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
@@ -88,8 +87,10 @@ void Graph::renderSnapShotGraph(const ArticulationWindow& window) {
     //to do: render graph of user articulation + match to closest in target recording
     //for now let's just make sure note onset detection works
     DBG("***************** NOTE ONSET DETECTED. GRAPH WILL DISPLAY FOR THAT ARTICULATION. ***********************");
+    printWindowData(window);
     repaint();
 }
+
 
 
 void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
@@ -107,6 +108,17 @@ void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
         processInputSample(sample);
     }
 }
+void Graph::printWindowData(const ArticulationWindow& window) {
+    DBG("onsetSample time: " << window.onsetSample / sampleRate);
+    DBG("onsetSampleIndex: " << window.onsetSampleIndex);
+    DBG("sustainSample time: " << window.sustainSample / sampleRate);
+    DBG("sustainSampleIndex: " << window.sustainSampleIndex);
+    DBG("delta time between onset and sustain: " << (window.sustainSample - window.onsetSample) / sampleRate);
+
+    DBG("flux.size(): " << window.flux.size() << ", first few elements: 0: " << window.flux[0] << ", 1: " << window.flux[1] << ", last: " << window.flux.back());
+    DBG("amps.size(): " << window.amps.size() << ", first few elements: 0: " << window.amps[0] << ", 1: " << window.amps[1] << ", last: " << window.amps.back());
+    //DBG("cents.size(): " << window.cents.size() << ", first few elements: 0: " << window.cents[0] << ", 1: " << window.cents[1] << ", last: " << window.cents.back());
+}
 
 void Graph::processInputSample(float sample) {
     if (!scoreState.hasProperty(isAnalyzing))
@@ -120,11 +132,11 @@ void Graph::processInputSample(float sample) {
     fifoIndex += 1;
     if (fifoIndex == fftSize) {
         fifoIndex = 0;
-        // if (!nextFFTBlockReady) {
-        //     std::fill(fftData.begin(), fftData.end(), 0.0f);
-        //     std::copy(fifo.begin(), fifo.end(), fftData.begin());
-        //     nextFFTBlockReady = true;
-        // }
+         //if (!nextFFTBlockReady) {
+         //    std::fill(fftData.begin(), fftData.end(), 0.0f);
+         //    std::copy(fifo.begin(), fifo.end(), fftData.begin());
+         //    nextFFTBlockReady = true;
+         //}
     }
     
     totalSamplesProcessed += 1;
@@ -133,6 +145,7 @@ void Graph::processInputSample(float sample) {
     if (count == hopLength) {
         count = 0;
         //make sure we've saturated our fifo (only guards against the very start)
+
         if(totalSamplesProcessed > fftSize) performAnalysis();
     }
 }
@@ -222,12 +235,6 @@ void Graph::performFluxScan() {
                         pending.onsetSample = onsetSample;
                         pending.onsetSampleIndex = onsetInit;
                         havePending = true;
-
-                        // ArticulationWindow window;
-                        // window.onsetSampleIndex = onsetInit;
-                        // window.onsetSample = onsetSample;
-
-                        // snapShots.push_back(window);
                     }
                 }
             }

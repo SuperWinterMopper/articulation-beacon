@@ -37,7 +37,7 @@ private:
     ViewOptions thisComponentView;
     VideoPlayer videoPlayer{ scoreState };
     Navbar navBar{scoreState, thisComponentView};
-    Metronome metronome {defaultBPM, scoreState, exerciseID };
+    Metronome metronome {defaultBPM, scoreState, exerciseID, true};
     Graph graph;
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;

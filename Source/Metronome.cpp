@@ -3,7 +3,7 @@
 #include "Metronome.h"
 
 //==============================================================================
-Metronome::Metronome(int bpm, juce::ValueTree a_scoreState, int a_exerciseID) : bpm(bpm), scoreState(a_scoreState), exerciseID(a_exerciseID)
+Metronome::Metronome(int bpm, juce::ValueTree a_scoreState, int a_exerciseID, bool metByPass) : bpm(bpm), scoreState(a_scoreState), exerciseID(a_exerciseID), metByPass(metByPass)
 {
     formatManager.registerBasicFormats();
     scoreState.addListener(this);
@@ -60,7 +60,8 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
     {
         const int toWrite = std::min(tailSamplesRemaining, numSamps);
         juce::AudioSourceChannelInfo tail{ bufferToFill.buffer, bufferToFill.startSample, toWrite };
-         metronomeSamplePtr->getNextAudioBlock(tail);
+        
+        if(!metByPass) metronomeSamplePtr->getNextAudioBlock(tail);
         tailSamplesRemaining -= toWrite;
 
         // if the tail filled the whole block, finished
@@ -94,7 +95,7 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
 
         int chunk1Len = std::min(metronomeSampleLength, numSamps - clickOffset);
         juce::AudioSourceChannelInfo chunk1{ bufferToFill.buffer, bufferToFill.startSample + clickOffset, chunk1Len };
-         metronomeSamplePtr->getNextAudioBlock(chunk1);
+        if (!metByPass) metronomeSamplePtr->getNextAudioBlock(chunk1);
 
         tailSamplesRemaining = metronomeSampleLength - chunk1Len;
     }

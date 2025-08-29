@@ -13,7 +13,11 @@ VideoPlayer::VideoPlayer(juce::ValueTree a_scoreState) : scoreState(a_scoreState
 
 VideoPlayer::~VideoPlayer()
 {
-    
+    // Stop playback first so no more frames/audio are requested
+    video.stop();
+
+    // Then drop the listener we added in the ctor
+    scoreState.removeListener(this);
 }
 
 void VideoPlayer::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property)

@@ -151,6 +151,7 @@ private:
     void updateMetaData();
     void renderSnapShotGraph(const ArticulationWindow& window);
     void writeToAbstractArtEventFifo(ArticulationWindow* pending);
+    void printWindowData(const ArticulationWindow& window);
 
     //for reading in binary data
     void loadTargetPack();
