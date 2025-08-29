@@ -37,14 +37,6 @@ void Graph::paint (juce::Graphics& g)
 }
 
 void Graph::timerCallback() {
-    // for (auto& i : foundOnsetSamples) {
-    //     if (!renderedSnapShots.count(i)) { //if we have yet to render it
-    //         renderSnapShotGraph(i);
-    //         renderedSnapShots.insert(i);
-    //         repaint(); //this is to show the potentially rendered graph
-    //     }
-    
-    // }
     jassert(snapShots.size() == abstractFifoCapacity);
 
     int s1, n1, s2, n2;
@@ -122,14 +114,11 @@ void Graph::performAnalysis() {
         getMagnitudeSpectrogram(fftPtr, newMags.data()); // fill prevMags with magnitude values
 
         float flux = computeFluxValue(newMags.data(), prevMags.data());
-        if (false) { //IMMEDIATE NEXT STEP: seems computeFluxValue or swap is causing nullptr read or something. confusing. I added a jassert in computeFluxValue so try that ouit. actually the jassert triggered wtf invesigate that 
         std::swap(prevMags, newMags);
 
         //retrieve amplitude value for this flux time frame window
-
-            bool ifScanFlux = processFluxSampleAndIfScan(flux, amp);
-            if (ifScanFlux) performFluxScan();
-        }
+        bool ifScanFlux = processFluxSampleAndIfScan(flux, amp);
+        if (ifScanFlux) performFluxScan();
     }
     else {
         getMagnitudeSpectrogram(fftPtr, prevMags.data()); // fill prevMags with magnitude values
@@ -267,7 +256,12 @@ void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {
 }
 
 float Graph::computeFluxValue(float* cur, float* prev) {
-    jassert((int)prevMags.size() == numBins && (int)newMags.size() == numBins);
+    if (!((int)prevMags.size() == numBins && (int)newMags.size() == numBins)) {
+        DBG("Error: prevMags.size is " << prevMags.size() << " while newMags.size is " << prevMags.size());
+        for (auto& i : prevMags) DBG("we have " << i << " in prevMag");
+        for (auto& i : newMags) DBG("we have " << i << " in newMag");
+        jassertfalse;
+    }
 
     float ret = 0;
     for (int i = 0; i < numBins; i++)

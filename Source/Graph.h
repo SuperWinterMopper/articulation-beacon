@@ -49,8 +49,8 @@ private:
     int count = 0; //counts up to hopLength to know when next to take FFT
 
     //the previous magnitude spectrogram, used for finding spectral flux.
-    std::vector<float> prevMags{ numBins };
-    std::vector<float> newMags{ numBins };
+    std::vector<float> prevMags = std::vector<float>(numBins);
+    std::vector<float> newMags = std::vector<float>(numBins);
     bool prevMagsComputed = false;
 
     //For maintaining flux values
