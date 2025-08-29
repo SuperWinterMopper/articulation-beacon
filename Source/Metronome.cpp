@@ -48,7 +48,7 @@ void Metronome::setMetCycleNumBeats()
     }
 }
 
-void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill, int channel)
 {
     const int numSamps = bufferToFill.numSamples;
 
@@ -60,7 +60,7 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
     {
         const int toWrite = std::min(tailSamplesRemaining, numSamps);
         juce::AudioSourceChannelInfo tail{ bufferToFill.buffer, bufferToFill.startSample, toWrite };
-        metronomeSamplePtr->getNextAudioBlock(tail);
+         metronomeSamplePtr->getNextAudioBlock(tail);
         tailSamplesRemaining -= toWrite;
 
         // if the tail filled the whole block, finished
@@ -94,7 +94,7 @@ void Metronome::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
 
         int chunk1Len = std::min(metronomeSampleLength, numSamps - clickOffset);
         juce::AudioSourceChannelInfo chunk1{ bufferToFill.buffer, bufferToFill.startSample + clickOffset, chunk1Len };
-        metronomeSamplePtr->getNextAudioBlock(chunk1);
+         metronomeSamplePtr->getNextAudioBlock(chunk1);
 
         tailSamplesRemaining = metronomeSampleLength - chunk1Len;
     }

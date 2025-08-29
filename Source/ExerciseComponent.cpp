@@ -109,22 +109,40 @@ void ExerciseComponent::prepareToPlay(int samplesPerBlockExpected, double sample
     graph.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
-void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill, juce::AudioIODevice* device)
 {
-    //Perform analysis with Graph
-    graph.getNextAudioBlock(bufferToFill);
+    auto activeInputChannels  = device->getActiveInputChannels();
+    auto activeOutputChannels = device->getActiveOutputChannels();
+    auto maxInputChannels  = activeInputChannels .getHighestBit() + 1;
+    auto maxOutputChannels = activeOutputChannels.getHighestBit() + 1;
 
+    if(maxInputChannels == 0) {
+        DBG("No active input channels");
+        return;
+    }
+    
+    //process input channels first
+    for (auto channel = 0; channel < maxInputChannels; channel++) {
+        if(activeInputChannels[channel]) {
+            auto* inBuffer = bufferToFill.buffer->getReadPointer (channel, bufferToFill.startSample);
+            //Perform analysis with Graph with this whole for loop
+            for (auto sample = 0; sample < bufferToFill.numSamples; sample++) {
+                graph.processInputSample(inBuffer[sample]);
+            }
+            break; //just process the first channel for now (mono)
+        }
+    }
+    
     // Write onto bufferToFill with metronome output
     bufferToFill.clearActiveBufferRegion();
-    //keep operating metronome if we're supposed to
-    if ( (bool) scoreState.getProperty(isMetronomePlaying) == true)
-    {
-        metronome.getNextAudioBlock(bufferToFill);
-    }
-    else //stop metronome
+
+    if ( (bool) scoreState.getProperty(isMetronomePlaying) == false) //stop metronome
     {
         metronome.reset();
         scoreState.setProperty(isVideoPlaying, false, nullptr);
+    }
+    else { //play metronome so fill the buffer with its data
+        metronome.getNextAudioBlock(bufferToFill, 0);
     }
 }
 

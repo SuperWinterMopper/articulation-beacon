@@ -12,7 +12,7 @@ class Metronome : private juce::ValueTree::Listener
 public:
     Metronome(int bpm, juce::ValueTree a_scoreState, int a_exerciseID);
 
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill, int channel);
     void reset();
     void prepareToPlay(int samplesPerBlock, double sampleRate);
     void setBPM(int a_bpm) { bpm = (double) a_bpm; interval = int(60.0 / a_bpm * sampleRate); };

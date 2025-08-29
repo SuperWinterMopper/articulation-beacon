@@ -95,7 +95,7 @@ void MainComponent::viewSwitch(ViewOptions newViewOption) {
         exerciseSelector.setVisible(true);
     }
     else {
-        currentExerciseIndex = static_cast<int>(newViewOption) - static_cast<int>(ViewOptions::EX1);
+    currentExerciseIndex = static_cast<int>(newViewOption) - static_cast<int>(ViewOptions::EX1);
         exercisesArray[currentExerciseIndex].setBounds(getLocalBounds());
         exercisesArray[currentExerciseIndex].setVisible(true);
     }
@@ -117,15 +117,16 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
+    auto* device = deviceManager.getCurrentAudioDevice();
     if (currentExerciseIndex >= 0) {
-        exercisesArray[currentExerciseIndex].getNextAudioBlock(bufferToFill);
+        exercisesArray[currentExerciseIndex].getNextAudioBlock(bufferToFill, device);
     }
 }
 
 void MainComponent::releaseResources()
 {
     for (auto& ex : exercisesArray)
-        ex.releaseResources();
+        ex.releaseResources();  
 }
 
 
@@ -153,6 +154,16 @@ void MainComponent::configInputOutput() {
     {
         // Specify the number of input and output channels that we want to open
         setAudioChannels(inputChannels, outputChannels);
+    }
+
+    auto* device = deviceManager.getCurrentAudioDevice();
+    if (device)
+    {
+        DBG("[AudioDevice] Inputs: " << device->getActiveInputChannels().countNumberOfSetBits()
+            << " / " << device->getInputChannelNames().size());
+        DBG("[AudioDevice] Outputs: " << device->getActiveOutputChannels().countNumberOfSetBits()
+            << " / " << device->getOutputChannelNames().size());
+        DBG("[AudioDevice] Device: " << device->getName());
     }
 }
 

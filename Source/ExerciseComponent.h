@@ -19,7 +19,7 @@ public:
     void resized() override;
 
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill, juce::AudioIODevice* device);
     void releaseResources();
 
     //this function is called by the home button to get back to home screen

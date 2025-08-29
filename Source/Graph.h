@@ -9,21 +9,22 @@
 class Graph : public juce::Component, private juce::ValueTree::Listener, private juce::Timer
 {
 public:
-    Graph(juce::ValueTree scoreState, int exerciseDataIndex);
-    ~Graph() override;
+Graph(juce::ValueTree scoreState, int exerciseDataIndex);
+~Graph() override;
 
-    void paint (juce::Graphics&) override;
-    void resized() override;
-    static constexpr int fftOrder = 11;
-    static constexpr int fftSize = 1 << fftOrder; //each buffer is roughly 46ms at sampleRate = 44100
-    static constexpr int numBins = fftSize / 2 + 1;
-    static constexpr int overlap = 4;
-    static constexpr int hopLength = fftSize / overlap;
+void paint (juce::Graphics&) override;
+void resized() override;
+static constexpr int fftOrder = 11;
+static constexpr int fftSize = 1 << fftOrder; //each buffer is roughly 46ms at sampleRate = 44100
+static constexpr int numBins = fftSize / 2 + 1;
+static constexpr int overlap = 4;
+static constexpr int hopLength = fftSize / overlap;
 
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
-    void releaseResources();
-    void reset();
+void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
+void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
+void releaseResources();
+void reset();
+void processInputSample(float sample);
 
     void timerCallback() override;
 
@@ -123,8 +124,6 @@ private:
     juce::AbstractFifo abstractArtEventFifo{abstractFifoCapacity};
     std::vector<ArticulationWindow> snapShots;
 
-
-
     //audio thread only
     ArticulationWindow pending;
     bool havePending = false;
@@ -135,11 +134,15 @@ private:
     //audio thread only. to easily look up if an articulation has been included in snapShots yet
     std::unordered_set<int64_t> foundOnsetSamples; 
 
+    //for testing purposes:
+    juce::Image spectrogramImage;
+    bool nextFFTBlockReady = false;
+    void drawNextLineOfSpectrogram();
+
     //===================================
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
     void getMagnitudeSpectrogram(float* a_fftData, float* res);
-    void processInputSample(float sample);
     bool processFluxSampleAndIfScan(float rawFlux, float amp);
     void performAnalysis();
     float computeFluxValue(float* cur, float* prev);

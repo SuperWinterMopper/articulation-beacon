@@ -5,7 +5,8 @@ Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) :
     fft(fftOrder), 
     scoreState(scoreState), 
     exerciseDataIndex(exerciseDataIndex), 
-    hannWindow(fftSize + 1, juce::dsp::WindowingFunction<float>::WindowingMethod::hann, false)
+    hannWindow(fftSize + 1, juce::dsp::WindowingFunction<float>::WindowingMethod::hann, false),
+    spectrogramImage(juce::Image::RGB, 512, 512, true)
 {
     scoreState.addListener(this);
 
@@ -34,10 +35,19 @@ void Graph::paint (juce::Graphics& g)
     g.setColour (juce::Colours::white);
     g.setFont (juce::FontOptions (14.0f));
     g.drawText ("Graph", getLocalBounds(), juce::Justification::centred, true);   // draw some placeholder text
+
+    g.setOpacity(1.0f);
+    g.drawImage(spectrogramImage, getLocalBounds().toFloat());
 }
 
 void Graph::timerCallback() {
     jassert(snapShots.size() == abstractFifoCapacity);
+
+    if (nextFFTBlockReady) {
+        drawNextLineOfSpectrogram();
+        nextFFTBlockReady = false;
+        repaint();
+    }
 
     int s1, n1, s2, n2;
     
@@ -46,6 +56,32 @@ void Graph::timerCallback() {
     for(int i = 0; i < n1; i++) renderSnapShotGraph( snapShots[s1 + i]);
     for(int i = 0; i < n2; i++) renderSnapShotGraph( snapShots[s2 + i]);
     abstractArtEventFifo.finishedRead(n1 + n2);
+}
+
+void Graph::drawNextLineOfSpectrogram() {
+    auto rightHandEdge = spectrogramImage.getWidth() - 1;
+    auto imageHeight = spectrogramImage.getHeight();
+
+    // first, shuffle our image leftwards by 1 pixel..
+    spectrogramImage.moveImageSection(0, 0, 1, 0, rightHandEdge, imageHeight);         // [1]
+
+    // then render our FFT data..
+    fft.performFrequencyOnlyForwardTransform(fftData.data());                   // [2]
+
+    // find the range of values produced, so we can scale our rendering to
+    // show up the detail clearly
+    auto maxLevel = juce::FloatVectorOperations::findMinAndMax(fftData.data(), fftSize / 2); // [3]
+
+    juce::Image::BitmapData bitmap{ spectrogramImage, rightHandEdge, 0, 1, imageHeight, juce::Image::BitmapData::writeOnly }; // [4]
+
+    for (auto y = 1; y < imageHeight; ++y)                                              // [5]
+    {
+        auto skewedProportionY = 1.0f - std::exp(std::log((float)y / (float)imageHeight) * 0.2f);
+        auto fftDataIndex = (size_t)juce::jlimit(0, fftSize / 2, (int)(skewedProportionY * fftSize / 2));
+        auto level = juce::jmap(fftData[fftDataIndex], 0.0f, juce::jmax(maxLevel.getEnd(), 1e-5f), 0.0f, 1.0f);
+
+        bitmap.setPixelColour(0, y, juce::Colour::fromHSV(level, 1.0f, level, 1.0f)); // [6]
+    }
 }
 
 void Graph::renderSnapShotGraph(const ArticulationWindow& window) {
@@ -65,21 +101,31 @@ void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
     if (!scoreState.getProperty(isAnalyzing))
         return;
 
-    if (bufferToFill.buffer->getNumChannels() > 0)
-    {
-        auto* channelData = bufferToFill.buffer->getReadPointer(0, bufferToFill.startSample);
-        for (auto i = 0; i < bufferToFill.numSamples; i++) {
-            float sample = channelData[i];
-            processInputSample(sample);
-        }
+    auto* channelData = bufferToFill.buffer->getReadPointer(0, bufferToFill.startSample);
+    for (auto i = 0; i < bufferToFill.numSamples; i++) {
+        float sample = channelData[i];
+        processInputSample(sample);
     }
 }
 
 void Graph::processInputSample(float sample) {
+    if (!scoreState.hasProperty(isAnalyzing))
+        DBG("ISSUE: in Graph.cpp isAnalyzing not yet set even though component initialized ");
+    //don't do anything if we aren't analyzing yet
+    if (!scoreState.getProperty(isAnalyzing))
+        return;
+
     fifo[fifoIndex] = sample;
     
     fifoIndex += 1;
-    if (fifoIndex == fftSize) fifoIndex = 0;
+    if (fifoIndex == fftSize) {
+        fifoIndex = 0;
+        // if (!nextFFTBlockReady) {
+        //     std::fill(fftData.begin(), fftData.end(), 0.0f);
+        //     std::copy(fifo.begin(), fifo.end(), fftData.begin());
+        //     nextFFTBlockReady = true;
+        // }
+    }
     
     totalSamplesProcessed += 1;
 
@@ -92,7 +138,6 @@ void Graph::processInputSample(float sample) {
 }
 
 void Graph::performAnalysis() {
-    DBG("Perfoming 1 analysis at " << (totalSamplesProcessed / sampleRate) << " seconds");
     //Copy data from fifo to fftData
     const float* inputPtr = fifo.data();
     float* fftPtr = fftData.data();
@@ -343,7 +388,6 @@ void Graph::reset() {
     pending = {};
     for (auto& w : snapShots) w = ArticulationWindow{};
     if (snapShots.size() != abstractFifoCapacity) snapShots.resize(abstractFifoCapacity);
-
 }
 
 void Graph::releaseResources()
@@ -361,7 +405,6 @@ void Graph::loadTargetPack() {
         DBG("ERROR: CAN;T FIND BINARY FILES AT " << binFolder.getFullPathName());
         jassert(false);
     }
-
 
     std::vector<targetpack::TargetArticulation> temp;
     if (auto res = targetpack::loadExercise(binFolder, exerciseDataIndex, (double)sampleRate, temp);
