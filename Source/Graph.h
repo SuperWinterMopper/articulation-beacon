@@ -41,7 +41,7 @@ private:
     juce::dsp::FFT fft;
     std::array<float, fftSize> fifo;
     std::array<float, fftSize * 2> fftData;
-    //std::array<float, fftSize> freqBins;
+    std::array<float, numBins> freqBins;
     int fifoIndex = 0;
     
     double sampleRate = 0.0;
@@ -64,6 +64,8 @@ private:
     std::array<int64_t, fluxSize> fluxTimeData;   // unwrapped times for the scan window
     std::array<float, fluxSize> ampFifo; //amp value for each index in fluxFifo
     std::array<float, fluxSize> ampData; 
+    std::array<float, fluxSize> centFifo; //cent value for each index in fluxFifo
+    std::array<float, fluxSize> centData;
     static constexpr int gaussDelayFrames = GaussianFIR<7>::delay();
 
     int fluxFifoIndex = 0;
@@ -143,7 +145,7 @@ private:
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property);
     void getMagnitudeSpectrogram(float* a_fftData, float* res);
-    bool processFluxSampleAndIfScan(float rawFlux, float amp);
+    bool processFluxSampleAndIfScan(float rawFlux, float amp, float centroid);
     void performAnalysis();
     float computeFluxValue(float* cur, float* prev);
     void performFluxScan();
@@ -152,6 +154,7 @@ private:
     void renderSnapShotGraph(const ArticulationWindow& window);
     void writeToAbstractArtEventFifo(ArticulationWindow* pending);
     void printWindowData(const ArticulationWindow& window);
+    float computeSpectralCentroid(float* mags);
 
     //for reading in binary data
     void loadTargetPack();

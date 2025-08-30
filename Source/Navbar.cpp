@@ -211,6 +211,22 @@ void Navbar::configureHearPlayButton()
 void Navbar::configureTempoButton()
 {
     int exerciseNum = static_cast<int>(thisComponentView) - 1; //convert enum value to int and make 0-indexed
+
+    jassert(exerciseNum >= 0 && exerciseNum < (int)exerciseTempo.size());
+    if (exerciseNum < 0 || exerciseNum >= (int)exerciseTempo.size())
+    {
+        tempoButton.setEnabled(false);
+        tempoButton.setButtonText("—");
+        return;
+    }
+    const auto& tempos = exerciseTempo[exerciseNum];
+    if (tempos.empty())
+    {
+        tempoButton.setEnabled(false);
+        tempoButton.setButtonText("—");
+        return;
+    }
+
     int slowTempo = exerciseTempo[exerciseNum][0]; //initially 0
     tempoButton.setButtonText(std::to_string(slowTempo) + "bpm");
 
@@ -223,6 +239,7 @@ void Navbar::configureTempoButton()
         {
             //convert enum value to int and make 0-indexed
             int exerciseNum = static_cast<int>(thisComponentView) - 1; 
+            jassert(exerciseNum >= 0 && exerciseNum < (int)exerciseTempo.size());
 
             //this exercise doens't have a fast version, don't do anything
             if (exerciseTempo[exerciseNum].size() < 2)

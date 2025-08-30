@@ -11,7 +11,7 @@ MainComponent::MainComponent()
     initializeCOM();
 
     appTitle.setFont(juce::Font(70.0f, juce::Font::bold));
-    appTitle.setText("ARTICULATION MONKEY", juce::dontSendNotification);
+    appTitle.setText("ARTICULATION BEACON", juce::dontSendNotification);
     appTitle.setColour(juce::Label::textColourId, juce::Colour(0xFF30cdca));
     appTitle.setJustificationType(juce::Justification::horizontallyCentred);
     addAndMakeVisible(appTitle);

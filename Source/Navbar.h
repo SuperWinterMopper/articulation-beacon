@@ -24,12 +24,12 @@ private:
     const int buttonWidth = 40;
 
     juce::ValueTree scoreState;
-
     ViewOptions thisComponentView;
 
     juce::Colour buttonNormalColor  = juce::Colour(0xF030cdca);
     juce::Colour buttonOverColor    = juce::Colour(0xB930cdca);
     juce::Colour buttonDownColor    = juce::Colour(0x9C30cdca);
+
 
     juce::ShapeButton homeButton{"Home", buttonNormalColor, buttonOverColor, buttonDownColor };
     juce::ShapeButton prevButton{"Previous", buttonNormalColor, buttonOverColor, buttonDownColor };

@@ -84,9 +84,6 @@ void Graph::drawNextLineOfSpectrogram() {
 }
 
 void Graph::renderSnapShotGraph(const ArticulationWindow& window) {
-    //to do: render graph of user articulation + match to closest in target recording
-    //for now let's just make sure note onset detection works
-    DBG("***************** NOTE ONSET DETECTED. GRAPH WILL DISPLAY FOR THAT ARTICULATION. ***********************");
     printWindowData(window);
     repaint();
 }
@@ -117,7 +114,7 @@ void Graph::printWindowData(const ArticulationWindow& window) {
 
     DBG("flux.size(): " << window.flux.size() << ", first few elements: 0: " << window.flux[0] << ", 1: " << window.flux[1] << ", last: " << window.flux.back());
     DBG("amps.size(): " << window.amps.size() << ", first few elements: 0: " << window.amps[0] << ", 1: " << window.amps[1] << ", last: " << window.amps.back());
-    //DBG("cents.size(): " << window.cents.size() << ", first few elements: 0: " << window.cents[0] << ", 1: " << window.cents[1] << ", last: " << window.cents.back());
+    DBG("cents.size(): " << window.cents.size() << ", first few elements: 0: " << window.cents[0] << ", 1: " << window.cents[1] << ", last: " << window.cents.back());
 }
 
 void Graph::processInputSample(float sample) {
@@ -167,15 +164,15 @@ void Graph::performAnalysis() {
     fft.performFrequencyOnlyForwardTransform(fftData.data(), true); //compute FFT of only magnitude values
 
     //Retrieve magnitude spectorgram
-
     if (prevMagsComputed) {
         getMagnitudeSpectrogram(fftPtr, newMags.data()); // fill prevMags with magnitude values
-
+        
+        float centroid = computeSpectralCentroid(newMags.data());
         float flux = computeFluxValue(newMags.data(), prevMags.data());
         std::swap(prevMags, newMags);
-
+        
         //retrieve amplitude value for this flux time frame window
-        bool ifScanFlux = processFluxSampleAndIfScan(flux, amp);
+        bool ifScanFlux = processFluxSampleAndIfScan(flux, amp, centroid);
         if (ifScanFlux) performFluxScan();
     }
     else {
@@ -184,7 +181,17 @@ void Graph::performAnalysis() {
     }
 }
 
-bool Graph::processFluxSampleAndIfScan(float rawFlux, float amp) {
+float Graph::computeSpectralCentroid(float* mags) {
+    double weighted = 0.0, total = 0.0;
+    for (int i = 0; i < numBins; ++i) {
+        weighted += mags[i] * freqBins[i];
+        total += mags[i];
+    }
+    float lastCentroid = total > 0.0 ? static_cast<float>(weighted / total) : 0.0f; 
+    return lastCentroid;
+}
+
+bool Graph::processFluxSampleAndIfScan(float rawFlux, float amp, float centroid) {
     // Smooth this single frame
     const float smoothed = fluxSmoother.process(rawFlux);
 
@@ -199,6 +206,7 @@ bool Graph::processFluxSampleAndIfScan(float rawFlux, float amp) {
     fluxFifo[fluxFifoIndex] = normed;
     fluxTimeFifo[fluxFifoIndex] = adjustedSample;
     ampFifo[fluxFifoIndex] = amp;
+    centFifo[fluxFifoIndex] = centroid;
 
     fluxFifoIndex += 1;
     if (fluxFifoIndex == fluxSize)
@@ -258,7 +266,8 @@ void Graph::performFluxScan() {
                 const int end = std::min<int>(fluxSize, i + detectionPaddingSize);
                 pending.flux.assign(fluxData.begin() + start, fluxData.begin() + end);
                 pending.amps.assign(ampData.begin() + start, ampData.begin() + end);
-                
+                pending.cents.assign(centData.begin() + start, centData.begin() + end);
+
                 foundOnsetSamples.insert(pending.onsetSample);
                 lastOnsetCooldownAnchor = pending.onsetSample; // to enforce min time between notes
                 
@@ -300,6 +309,13 @@ void Graph::copyFluxFifoToData() {
     std::memcpy(dst, src + fluxFifoIndex, (fluxSize - fluxFifoIndex) * sizeof(float));
     if (fluxFifoIndex > 0)
         std::memcpy(dst + fluxSize - fluxFifoIndex, src, fluxFifoIndex * sizeof(float));
+
+    //Put centFifo into centData
+    const float* cSrc = centFifo.data();
+    float* cDst = centData.data();
+    std::memcpy(cDst, cSrc + fluxFifoIndex, (fluxSize - fluxFifoIndex) * sizeof(float));
+    if (fluxFifoIndex > 0)
+        std::memcpy(cDst + fluxSize - fluxFifoIndex, cSrc, fluxFifoIndex * sizeof(float));
 }
 
 void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {
@@ -346,10 +362,10 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
 
     reset();
 
-    ////initialize frequency bins:
-    //double binSpacing = (double) sampleRate / fftSize;
-    //for (int i = 0; i < fftSize; i++) 
-    //    freqBins[i] = i * binSpacing;
+    //initialize frequency bins:
+    double binHz = (double) sampleRate / fftSize;
+    for (int i = 0; i < fftSize; i++) 
+       freqBins[i] = i * binHz;
 
     loadTargetPack(); //loads binary file for target articulation data
 }
@@ -365,6 +381,7 @@ void Graph::updateMetaData() {
 }
 
 void Graph::reset() {
+    stopTimer();
     fifoIndex = 0;
     count = 0;
     totalSamplesProcessed = 0;
@@ -395,6 +412,7 @@ void Graph::reset() {
     pending = {};
     for (auto& w : snapShots) w = ArticulationWindow{};
     if (snapShots.size() != abstractFifoCapacity) snapShots.resize(abstractFifoCapacity);
+    startTimer(60);
 }
 
 void Graph::releaseResources()

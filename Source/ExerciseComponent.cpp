@@ -105,7 +105,7 @@ void ExerciseComponent::valueTreePropertyChanged(juce::ValueTree& tree, const ju
         metronome.reset();
     }
     else {
-        DBG("This property doesn't exist...");
+        DBG("This property: " << property.toString() << " doesn't exist... ");
     }
 }
 
