@@ -1,8 +1,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-
-
 #include "ExerciseSelector.h"
 #include "ExerciseComponent.h"
 
@@ -100,6 +98,8 @@ private:
     } };
 
     int currentExerciseIndex = -1; // -1 means HOME
+
+    bool exerciseComponentsReady = false;
 
     std::unique_ptr<juce::FileLogger> fileLogger; 
 

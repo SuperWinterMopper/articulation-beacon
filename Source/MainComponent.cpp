@@ -5,9 +5,6 @@ MainComponent::MainComponent()
 {
     curView.setProperty(viewState, static_cast<int>(ViewOptions::HOME), nullptr);
 
-    //attach, but not display exercise components
-    setUpExerciseComponents();
-
     initializeCOM();
 
     appTitle.setFont(juce::Font(70.0f, juce::Font::bold));
@@ -29,6 +26,11 @@ MainComponent::MainComponent()
     configInputOutput();
 
     setBounds(juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea);
+    
+    // Create a timer to call this after the window is created:
+    juce::Timer::callAfterDelay(10, [this]() {
+        setUpExerciseComponents();
+    });
 }
 
 MainComponent::~MainComponent()
@@ -64,8 +66,11 @@ void MainComponent::resized()
     exerciseSelector.setBounds(exerciseSelectXPadding, exerciseSelectYPadding, getWidth() - 2 * exerciseSelectXPadding, getHeight());
     appTitle.toFront(false);
 
-    for (int i = 0; i < NUM_EXERCISES; i++) 
-        exercisesArray[i].setBounds(getLocalBounds());
+    // Only resize exercise components if they're ready
+    if (exerciseComponentsReady) {
+        for (int i = 0; i < NUM_EXERCISES; i++) 
+            exercisesArray[i].setBounds(getLocalBounds());
+    }
 }
 
 //Handles logic for switching views. Note that viewSwitch assumes all components in ViewOptions have already been attached to MainComponent
@@ -133,10 +138,11 @@ void MainComponent::releaseResources()
 void MainComponent::setUpExerciseComponents() {
     for (ExerciseComponent& exComp : exercisesArray)
     {
-        //connect homeButtonClick to viewSwitch. not the greatest programming but for now it works
         exComp.homeButtonClick = [this]() { viewSwitch(ViewOptions::HOME); };
         addChildComponent(exComp);
     }
+    exerciseComponentsReady = true;
+    resized(); // Call resized here once components are ready
 }
 
 void MainComponent::configInputOutput() {

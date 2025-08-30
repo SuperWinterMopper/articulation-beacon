@@ -8,9 +8,12 @@ ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentVi
     curView.addListener(this);
     scoreState.addListener(this);
 
-    int setbpm = exerciseTempo[exerciseID][(int)scoreState.getProperty(tempo)];
-    DBG("setbpm is getting set to " << exerciseTempo[exerciseID][(int)scoreState.getProperty(tempo)] << " for this exercise");
-    metronome.setBPM(exerciseTempo[exerciseID][(int)scoreState.getProperty(tempo)]);
+    // Validate exerciseID and tempo index
+    int tempoIndex = std::max(0, std::min(static_cast<int>(scoreState.getProperty(tempo)), static_cast<int>(exerciseTempo[exerciseID].size()) - 1));
+    
+    int setbpm = exerciseTempo[exerciseID][tempoIndex];
+    DBG("setbpm is getting set to " << setbpm << " for this exercise");
+    metronome.setBPM(setbpm);
 
     //asks MainComponent to update go to home
     navBar.homeButtonClick = [this]() { if (homeButtonClick) homeButtonClick(); };

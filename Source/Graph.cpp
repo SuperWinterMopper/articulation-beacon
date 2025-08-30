@@ -364,14 +364,25 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
 
     //initialize frequency bins:
     double binHz = (double) sampleRate / fftSize;
-    for (int i = 0; i < fftSize; i++) 
+    for (int i = 0; i < numBins; i++) 
        freqBins[i] = i * binHz;
 
     loadTargetPack(); //loads binary file for target articulation data
 }
 
 void Graph::updateMetaData() {
-    ExerciseDataStruct data = ExerciseData[exerciseDataIndex + (int)scoreState.getProperty(tempo)]; //update metaData if we switch to faster or slower tempo
+    int tempoValue = scoreState.hasProperty(tempo) ? static_cast<int>(scoreState.getProperty(tempo)) : 0;
+    int index = exerciseDataIndex + tempoValue;
+    
+    // Verify index is within bounds of ExerciseData array
+    if (index < 0 || index >= static_cast<int>(std::size(ExerciseData))) {
+        DBG("ERROR: Invalid index " << index << " for ExerciseData array (size: " << std::size(ExerciseData) << "). Using index 0 instead.");
+        index = 0;
+    }
+    
+    ExerciseDataStruct data = ExerciseData[index];
+    
+    // Rest of function remains the same
     metaData.onsetThresh = data.onset_thresh;
     metaData.bpm = data.bpm;
     metaData.sustainThresholdValue = data.sustain_thresh;

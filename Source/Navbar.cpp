@@ -12,13 +12,13 @@ Navbar::Navbar(juce::ValueTree scoreState, ViewOptions thisComponentView) : scor
     configureHearPlayButton();
     configureTempoButton();
 
-    addAndMakeVisible(homeButton);
-    addAndMakeVisible(prevButton);
-    addAndMakeVisible(playButton);
-    addAndMakeVisible(skipButton);
-    addAndMakeVisible(settingsButton);
-    addAndMakeVisible(hearPlayButton);
-    addAndMakeVisible(tempoButton);
+    //addAndMakeVisible(homeButton);
+    //addAndMakeVisible(prevButton);
+    //addAndMakeVisible(playButton);
+    //addAndMakeVisible(skipButton);
+    //addAndMakeVisible(settingsButton);
+    //addAndMakeVisible(hearPlayButton);
+    //addAndMakeVisible(tempoButton);
 
     //this is a default size but will be overidden by parent Exercise components
     setSize(100, 800);
@@ -120,7 +120,8 @@ void Navbar::configureHomeButton()
     juce::Path path;
     path.loadPathFromData(pathData, sizeof(pathData));
 
-    homeButton.setShape(path, true, true, true);
+    homeButton.setSize(buttonWidth, buttonWidth);
+    homeButton.setShape(path, true, true, false); 
 
     //button calls `homeButtonClick()` when clicked. This is implemented by the MainComponent
     homeButton.onClick = [this] { if (homeButtonClick) homeButtonClick(); };
@@ -134,7 +135,8 @@ void Navbar::configurePrevButton()
     juce::Path path;
     path.loadPathFromData(pathData, sizeof(pathData));
 
-    prevButton.setShape(path, true, true, true);
+    prevButton.setSize(buttonWidth, buttonWidth);
+    prevButton.setShape(path, true, true, false); 
 }
 
 void Navbar::configurePlayButton()
@@ -145,7 +147,8 @@ void Navbar::configurePlayButton()
     juce::Path path;
     path.loadPathFromData(pathData, sizeof(pathData));
 
-    playButton.setShape(path, true, true, true);
+    playButton.setSize(buttonWidth, buttonWidth);
+    playButton.setShape(path, true, true, false); 
 
     //Switch video playing 
     playButton.onClick = [this] {scoreState.setProperty(isMetronomePlaying, !scoreState[isMetronomePlaying], nullptr); };
@@ -159,7 +162,8 @@ void Navbar::configureSkipButton()
     juce::Path path;
     path.loadPathFromData(pathData, sizeof(pathData));
 
-    skipButton.setShape(path, true, true, true);
+    skipButton.setSize(buttonWidth, buttonWidth);
+    skipButton.setShape(path, true, true, false); 
 }
 
 
@@ -179,7 +183,8 @@ void Navbar::configureSettingsButton()
     juce::Path path;
     path.loadPathFromData(pathData, sizeof(pathData));
 
-    settingsButton.setShape(path, true, true, true); 
+    settingsButton.setSize(buttonWidth, buttonWidth);
+    settingsButton.setShape(path, true, true, false); 
 }
 
 void Navbar::configureHearPlayButton()
@@ -216,14 +221,14 @@ void Navbar::configureTempoButton()
     if (exerciseNum < 0 || exerciseNum >= (int)exerciseTempo.size())
     {
         tempoButton.setEnabled(false);
-        tempoButton.setButtonText("—");
+        tempoButton.setButtonText("ï¿½");
         return;
     }
     const auto& tempos = exerciseTempo[exerciseNum];
     if (tempos.empty())
     {
         tempoButton.setEnabled(false);
-        tempoButton.setButtonText("—");
+        tempoButton.setButtonText("ï¿½");
         return;
     }
 
