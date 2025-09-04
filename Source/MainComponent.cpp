@@ -25,7 +25,8 @@ MainComponent::MainComponent()
 
     configInputOutput();
 
-    setBounds(juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea);
+    // Use a safe initial size; the window will centre to this content size.
+    setSize(1024, 768);
     
     // Create a timer to call this after the window is created:
     juce::Timer::callAfterDelay(10, [this]() {

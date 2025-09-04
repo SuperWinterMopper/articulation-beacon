@@ -37,15 +37,15 @@ private:
     juce::ShapeButton skipButton{"Skip", buttonNormalColor, buttonOverColor, buttonDownColor };
     juce::ShapeButton settingsButton{"Settings", buttonNormalColor, buttonOverColor, buttonDownColor };
     juce::TextButton hearPlayButton{ "Hear then Play" };
-    juce::TextButton tempoButton{ "Hear then Play" };
+    juce::TextButton tempoButton{ "Tempo" };
 
-    void Navbar::configureHomeButton();
-    void Navbar::configurePrevButton();
-    void Navbar::configurePlayButton();
-    void Navbar::configureSkipButton();
-    void Navbar::configureSettingsButton();
-    void Navbar::configureHearPlayButton();
-    void Navbar::configureTempoButton();
+    void configureHomeButton();
+    void configurePrevButton();
+    void configurePlayButton();
+    void configureSkipButton();
+    void configureSettingsButton();
+    void configureHearPlayButton();
+    void configureTempoButton();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Navbar)
 };

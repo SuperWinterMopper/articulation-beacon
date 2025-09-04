@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 #include "ScoreData.h"
-#include "Utils.h"
+#include "utils.h"
 
 //==============================================================================
 /*
@@ -43,7 +43,7 @@ private:
     juce::ValueTree scoreState;
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
-    void Metronome::setMetCycleNumBeats();
+    void setMetCycleNumBeats();
 
     juce::AudioFormatManager formatManager;
     std::unique_ptr <juce::AudioFormatReaderSource> metronomeSamplePtr{ nullptr };

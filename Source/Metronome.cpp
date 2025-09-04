@@ -31,6 +31,9 @@ void Metronome::prepareToPlay(int samplesPerBlock, double appSampleRate)
         metronomeSamplePtr->prepareToPlay(samplesPerBlock, sampleRate);
         DBG("Metronome file loaded");
     }
+    else {
+        DBG("Metronome file not loaded");
+    }
 }
 
 void Metronome::setMetCycleNumBeats() 

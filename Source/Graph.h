@@ -5,6 +5,8 @@
 #include "Utils.h"
 #include "GaussianSmoother.h"
 #include "TargetPack.h"
+#include <unordered_set>
+#include <atomic>
 
 class Graph : public juce::Component, private juce::ValueTree::Listener, private juce::Timer
 {
@@ -32,6 +34,7 @@ private:
     juce::ValueTree scoreState;
     int exerciseDataIndex;
     juce::dsp::WindowingFunction<float> hannWindow;
+    std::atomic<bool> analyzingActive { false }; // mirror of scoreState[isAnalyzing] for RT-safe reads
 
     //Graph properties
     int renderWidthInPixels = 1 << 10;

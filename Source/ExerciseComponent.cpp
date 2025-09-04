@@ -118,8 +118,7 @@ void ExerciseComponent::prepareToPlay(int samplesPerBlockExpected, double sample
     graph.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
-void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill, juce::AudioIODevice* device)
-{
+void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill, juce::AudioIODevice* device) {
     auto activeInputChannels  = device->getActiveInputChannels();
     auto activeOutputChannels = device->getActiveOutputChannels();
     auto maxInputChannels  = activeInputChannels .getHighestBit() + 1;
@@ -129,7 +128,7 @@ void ExerciseComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bu
         DBG("No active input channels");
         return;
     }
-    
+
     //process input channels first
     for (auto channel = 0; channel < maxInputChannels; channel++) {
         if(activeInputChannels[channel]) {

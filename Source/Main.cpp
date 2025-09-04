@@ -31,7 +31,14 @@ public:
     void shutdown() override
     {
         // Add your application's shutdown code here..
-
+        // Ensure any background work inside MainComponent is stopped before tearing down the window
+        if (mainWindow != nullptr)
+        {
+            if (auto* mc = dynamic_cast<MainComponent*>(mainWindow->getContentComponent()))
+            {
+                mc->shutdownAudio();
+            }
+        }
         mainWindow = nullptr; // (deletes our window)
     }
 
@@ -64,17 +71,26 @@ public:
                                                           .findColour (juce::ResizableWindow::backgroundColourId),
                               DocumentWindow::allButtons)
         {
-            setUsingNativeTitleBar (true);
+            // Delay switching title bar style to reduce early HWND recreations
+            setUsingNativeTitleBar (false);
             setContentOwned (new MainComponent(), true);
 
            #if JUCE_IOS || JUCE_ANDROID
             setFullScreen (true);
            #else
-            setResizable (true, true);
+            // Create with a conservative initial state; avoid immediate resizable/native style churn
+            setResizable (false, false);
             centreWithSize (getWidth(), getHeight());
            #endif
 
             setVisible (true);
+            // After window is shown, enable native title bar to avoid an early style change
+            juce::Timer::callAfterDelay(50, [this]() { setUsingNativeTitleBar(true); });
+
+           #if ! (JUCE_IOS || JUCE_ANDROID)
+            // Enable resizable shortly after show to avoid early HWND recreate issues on some systems
+            juce::Timer::callAfterDelay(50, [this]() { setResizable(true, true); });
+           #endif
         }
 
         void closeButtonPressed() override

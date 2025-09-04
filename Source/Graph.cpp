@@ -52,8 +52,18 @@ void Graph::timerCallback() {
     
     //read as many as possible from the queue. shouldn't be more than a few, probably much less
     abstractArtEventFifo.prepareToRead(abstractArtEventFifo.getNumReady(), s1, n1, s2, n2);
-    for(int i = 0; i < n1; i++) renderSnapShotGraph( snapShots[s1 + i]);
-    for(int i = 0; i < n2; i++) renderSnapShotGraph( snapShots[s2 + i]);
+    jassert(n1 >= 0 && n2 >= 0);
+    jassert(s1 >= 0 && s2 >= 0);
+    if (n1 > 0 && (s1 + n1) > (int)snapShots.size()) {
+        DBG("Graph::timerCallback overflow: s1=" << s1 << " n1=" << n1 << " size=" << (int)snapShots.size());
+        n1 = juce::jmax(0, (int)snapShots.size() - s1);
+    }
+    if (n2 > 0 && (s2 + n2) > (int)snapShots.size()) {
+        DBG("Graph::timerCallback overflow: s2=" << s2 << " n2=" << n2 << " size=" << (int)snapShots.size());
+        n2 = juce::jmax(0, (int)snapShots.size() - s2);
+    }
+    for(int i = 0; i < n1; i++) { auto w = snapShots[s1 + i]; renderSnapShotGraph(w); }
+    for(int i = 0; i < n2; i++) { auto w = snapShots[s2 + i]; renderSnapShotGraph(w); }
     abstractArtEventFifo.finishedRead(n1 + n2);
 }
 
@@ -93,10 +103,8 @@ void Graph::renderSnapShotGraph(const ArticulationWindow& window) {
 void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     // DBG("getNextAudioBlock of Graph.cpp called");
-    if (!scoreState.hasProperty(isAnalyzing))
-        DBG("ISSUE: in Graph.cpp isAnalyzing not yet set even though component initialized ");
-    //don't do anything if we aren't analyzing yet
-    if (!scoreState.getProperty(isAnalyzing))
+    //don't do anything if we aren't analyzing yet (RT-safe flag)
+    if (!analyzingActive.load(std::memory_order_relaxed))
         return;
 
     auto* channelData = bufferToFill.buffer->getReadPointer(0, bufferToFill.startSample);
@@ -106,15 +114,28 @@ void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
     }
 }
 void Graph::printWindowData(const ArticulationWindow& window) {
+    if (sampleRate <= 0.0) { DBG("printWindowData: invalid sampleRate " << sampleRate); jassertfalse; }
     DBG("onsetSample time: " << window.onsetSample / sampleRate);
     DBG("onsetSampleIndex: " << window.onsetSampleIndex);
     DBG("sustainSample time: " << window.sustainSample / sampleRate);
     DBG("sustainSampleIndex: " << window.sustainSampleIndex);
     DBG("delta time between onset and sustain: " << (window.sustainSample - window.onsetSample) / sampleRate);
 
-    DBG("flux.size(): " << window.flux.size() << ", first few elements: 0: " << window.flux[0] << ", 1: " << window.flux[1] << ", last: " << window.flux.back());
-    DBG("amps.size(): " << window.amps.size() << ", first few elements: 0: " << window.amps[0] << ", 1: " << window.amps[1] << ", last: " << window.amps.back());
-    DBG("cents.size(): " << window.cents.size() << ", first few elements: 0: " << window.cents[0] << ", 1: " << window.cents[1] << ", last: " << window.cents.back());
+    if (!window.flux.empty()) {
+        float f0 = window.flux.size() > 0 ? window.flux[0] : 0.0f;
+        float f1 = window.flux.size() > 1 ? window.flux[1] : f0;
+        DBG("flux.size(): " << window.flux.size() << ", first few elements: 0: " << f0 << ", 1: " << f1 << ", last: " << window.flux.back());
+    } else DBG("flux.size(): 0");
+    if (!window.amps.empty()) {
+        float a0 = window.amps.size() > 0 ? window.amps[0] : 0.0f;
+        float a1 = window.amps.size() > 1 ? window.amps[1] : a0;
+        DBG("amps.size(): " << window.amps.size() << ", first few elements: 0: " << a0 << ", 1: " << a1 << ", last: " << window.amps.back());
+    } else DBG("amps.size(): 0");
+    if (!window.cents.empty()) {
+        float c0 = window.cents.size() > 0 ? window.cents[0] : 0.0f;
+        float c1 = window.cents.size() > 1 ? window.cents[1] : c0;
+        DBG("cents.size(): " << window.cents.size() << ", first few elements: 0: " << c0 << ", 1: " << c1 << ", last: " << window.cents.back());
+    } else DBG("cents.size(): 0");
 }
 
 void Graph::processInputSample(float sample) {
@@ -343,8 +364,12 @@ void Graph::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifi
         if (property == tempo) 
             reset();
         
-        if (property == isAnalyzing) 
-            reset(); 
+        if (property == isAnalyzing) {
+            bool analyzing = scoreState.hasProperty(isAnalyzing) ? (bool)scoreState.getProperty(isAnalyzing) : false;
+            analyzingActive.store(analyzing, std::memory_order_relaxed);
+            DBG("Graph::valueTreePropertyChanged isAnalyzing -> " << (analyzing ? "true" : "false"));
+            reset();
+        }
     }
 }
 
@@ -368,6 +393,10 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
        freqBins[i] = i * binHz;
 
     loadTargetPack(); //loads binary file for target articulation data
+
+    // Mirror analyze flag into RT-safe atomic
+    bool analyzing = scoreState.hasProperty(isAnalyzing) ? (bool)scoreState.getProperty(isAnalyzing) : false;
+    analyzingActive.store(analyzing, std::memory_order_relaxed);
 }
 
 void Graph::updateMetaData() {
@@ -423,7 +452,7 @@ void Graph::reset() {
     pending = {};
     for (auto& w : snapShots) w = ArticulationWindow{};
     if (snapShots.size() != abstractFifoCapacity) snapShots.resize(abstractFifoCapacity);
-    startTimer(60);
+    startTimerHz(60);
 }
 
 void Graph::releaseResources()
