@@ -93,14 +93,18 @@ void Graph::drawNextLineOfSpectrogram() {
     }
 }
 
-void Graph::renderSnapShotGraph(const ArticulationWindow& window) {
+void Graph::renderSnapShotGraph(const ArticulationWindow& user) {
     // printWindowData(window);
 
     for(ArticulationWindow& target : targetArticulations) {
-        if(target.onsetSample >= window.onsetSample) {
-            DBG("Identified correspondoing target articulation window");
+        if(target.onsetSample >= user.onsetSample) {
+            DBG("Identified correspondoing target articulation window, target data is: ");
             printWindowData(target);
-            return;
+            DBG("user data is: ");
+            printWindowData(user);
+
+
+            jassert(false);
         }
     }
 
@@ -159,11 +163,11 @@ void Graph::processInputSample(float sample) {
     fifoIndex += 1;
     if (fifoIndex == fftSize) {
         fifoIndex = 0;
-         //if (!nextFFTBlockReady) {
-         //   std::fill(fftData.begin(), fftData.end(), 0.0f);
-         //   std::copy(fifo.begin(), fifo.end(), fftData.begin());
-         //   nextFFTBlockReady = true;
-         //}
+         if (!nextFFTBlockReady) {
+            std::fill(fftData.begin(), fftData.end(), 0.0f);
+            std::copy(fifo.begin(), fifo.end(), fftData.begin());
+            nextFFTBlockReady = true;
+         }
     }
     
     totalSamplesProcessed += 1;
@@ -284,6 +288,7 @@ void Graph::performFluxScan() {
             }
         }
         else {
+            //if ((fluxTimeData[i] - pending.onsetSample) / sampleRate < .03) break; //ensure 30ms gap
             // Look ahead window 
             int end = std::min(i + (int) metaData.minFramesBetweenNotes, fluxSize);
             double avg = 0.0;
