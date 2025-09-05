@@ -15,7 +15,7 @@ Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) :
     //reserve memory. snapShots.resize because compiler is shitty and can't parse normal size
     snapShots.resize(abstractFifoCapacity);
     foundOnsetSamples.reserve(abstractFifoCapacity);
-
+    updateMetaData();
 }
 
 Graph::~Graph()
@@ -94,11 +94,20 @@ void Graph::drawNextLineOfSpectrogram() {
 }
 
 void Graph::renderSnapShotGraph(const ArticulationWindow& window) {
-    printWindowData(window);
+    // printWindowData(window);
+
+    for(ArticulationWindow& target : targetArticulations) {
+        if(target.onsetSample >= window.onsetSample) {
+            DBG("Identified correspondoing target articulation window");
+            printWindowData(target);
+            return;
+        }
+    }
+
+    DBG("Did not find corresponding target articulation window");
+
     repaint();
 }
-
-
 
 void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
@@ -151,9 +160,9 @@ void Graph::processInputSample(float sample) {
     if (fifoIndex == fftSize) {
         fifoIndex = 0;
          //if (!nextFFTBlockReady) {
-         //    std::fill(fftData.begin(), fftData.end(), 0.0f);
-         //    std::copy(fifo.begin(), fifo.end(), fftData.begin());
-         //    nextFFTBlockReady = true;
+         //   std::fill(fftData.begin(), fftData.end(), 0.0f);
+         //   std::copy(fifo.begin(), fifo.end(), fftData.begin());
+         //   nextFFTBlockReady = true;
          //}
     }
     
@@ -163,12 +172,13 @@ void Graph::processInputSample(float sample) {
     if (count == hopLength) {
         count = 0;
         //make sure we've saturated our fifo (only guards against the very start)
-
-        if(totalSamplesProcessed > fftSize) performAnalysis();
+         if(totalSamplesProcessed > fftSize) performAnalysis();
     }
 }
 
 void Graph::performAnalysis() {
+    //DBG("performAnalysis called");
+    //DBG("performAnalysis called");
     //Copy data from fifo to fftData
     const float* inputPtr = fifo.data();
     float* fftPtr = fftData.data();
@@ -194,6 +204,7 @@ void Graph::performAnalysis() {
         
         //retrieve amplitude value for this flux time frame window
         bool ifScanFlux = processFluxSampleAndIfScan(flux, amp, centroid);
+        //DBG("processFluxSampleAndIfScan called, ifScanFlux is " << (int)ifScanFlux);
         if (ifScanFlux) performFluxScan();
     }
     else {
@@ -246,6 +257,9 @@ void Graph::performFluxScan() {
     //Make fluxData [0... fluxSize - 1] of flux values, similar for fluxTimeData 
     copyFluxFifoToData();
 
+    DBG("performFluxScan called, printing metadata");
+    printMetaData();
+
     int onsetInit = 0;
 
     for (int i = 1; i < fluxSize - 1; i++) {
@@ -264,6 +278,7 @@ void Graph::performFluxScan() {
                         pending.onsetSample = onsetSample;
                         pending.onsetSampleIndex = onsetInit;
                         havePending = true;
+                        DBG("Found articulation in performFluxScan");
                     }
                 }
             }
@@ -278,6 +293,7 @@ void Graph::performFluxScan() {
                 count++;
             }
             avg /= std::max(1, count);
+            DBG("looking for sustain, avg=" << avg << " at i=" << i << " end=" << end);
 
             if (avg < metaData.sustainThresholdValue) {
                 // Register sustain
@@ -339,7 +355,7 @@ void Graph::copyFluxFifoToData() {
         std::memcpy(cDst + fluxSize - fluxFifoIndex, cSrc, fluxFifoIndex * sizeof(float));
 }
 
-void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) {
+void Graph::getMagnitudeSpectrogram(float* a_fftData, float* res) { 
     for (int i = 0; i < numBins; i++) 
         res[i] = a_fftData[i];
 }
@@ -371,10 +387,21 @@ void Graph::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifi
             reset();
         }
     }
+    printMetaData();
 }
 
 void Graph::resized() {
+     printMetaData();
+}
 
+void Graph::printMetaData() {
+    DBG("Graph MetaData:");
+    DBG("onsetThresh: " << metaData.onsetThresh);
+    DBG("bpm: " << metaData.bpm);
+    DBG("sustainThresholdValue: " << metaData.sustainThresholdValue);
+    DBG("minSecondsBetweenNotes: " << metaData.minSecondsBetweenNotes);
+    DBG("minSamplesBetweenNotes: " << metaData.minSamplesBetweenNotes);
+    DBG("minFramesBetweenNotes: " << metaData.minFramesBetweenNotes);
 }
 
 void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
@@ -400,24 +427,41 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
 }
 
 void Graph::updateMetaData() {
+    DBG("Updating Graph MetaData based on ValueTree and exerciseDataIndex");
+    DBG("Updating Graph MetaData based on ValueTree and exerciseDataIndex");
+    // exerciseDataIndex here refers to the exercise ID (0..NUM_EXERCISES-1)
+    const int exId = juce::jlimit(0, (int)exerciseTempo.size() - 1, exerciseDataIndex);
+
+    // Compute base index into ExerciseData by summing number of tempo variants of prior exercises
+    int base = 0;
+    for (int e = 0; e < exId; ++e) base += (int)exerciseTempo[e].size();
+
+    // Clamp tempo selection to available variants for this exercise
     int tempoValue = scoreState.hasProperty(tempo) ? static_cast<int>(scoreState.getProperty(tempo)) : 0;
-    int index = exerciseDataIndex + tempoValue;
-    
+    const int variants = (int)exerciseTempo[exId].size();
+    tempoValue = juce::jlimit(0, juce::jmax(0, variants - 1), tempoValue);
+
+    const int index = base + tempoValue;
+
     // Verify index is within bounds of ExerciseData array
     if (index < 0 || index >= static_cast<int>(std::size(ExerciseData))) {
-        DBG("ERROR: Invalid index " << index << " for ExerciseData array (size: " << std::size(ExerciseData) << "). Using index 0 instead.");
-        index = 0;
+        DBG("Graph::updateMetaData ERROR: computed index=" << index << " out of range (size=" << std::size(ExerciseData) << ") exId=" << exId << " base=" << base << " tempoValue=" << tempoValue << " variants=" << variants);
+        jassertfalse;
+        return;
     }
-    
-    ExerciseDataStruct data = ExerciseData[index];
+
+    DBG("Graph::updateMetaData exId=" << exId << " baseIndex=" << base << " tempoValue=" << tempoValue << " -> dataIndex=" << index);
+    ExerciseDataStruct data = ExerciseData[(size_t)index];
     
     // Rest of function remains the same
     metaData.onsetThresh = data.onset_thresh;
+    // metaData.onsetThresh = .0009; //test value
     metaData.bpm = data.bpm;
     metaData.sustainThresholdValue = data.sustain_thresh;
     metaData.minSecondsBetweenNotes = data.min_time_between;
     metaData.minSamplesBetweenNotes = static_cast<int64_t>(metaData.minSecondsBetweenNotes * sampleRate);
     metaData.minFramesBetweenNotes = static_cast<int>((metaData.minSamplesBetweenNotes + hopLength / 2) / hopLength);
+    printMetaData();
 }
 
 void Graph::reset() {
@@ -477,8 +521,7 @@ void Graph::loadTargetPack() {
     {
         targetArticulations.clear();
         targetArticulations.reserve(temp.size());
-        for (auto& t : temp)
-        {
+        for (auto& t : temp) {
             ArticulationWindow w;
             w.onsetSample = t.onsetSample;
             w.sustainSample = t.sustainSample;

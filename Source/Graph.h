@@ -116,7 +116,7 @@ private:
         int sustainSampleIndex = 0; 
         std::vector<float> flux;
         std::vector<float> amps;
-        std::vector<float> cents;  // this is added but not used yet
+        std::vector<float> cents; 
     };
     //This denotes how many samples before onset and after sustain we should include. 
     //Will not always be of this size due to how we analyze the fifo but usually will be this.
@@ -158,6 +158,7 @@ private:
     void writeToAbstractArtEventFifo(ArticulationWindow* pending);
     void printWindowData(const ArticulationWindow& window);
     float computeSpectralCentroid(float* mags);
+    void printMetaData();
 
     //for reading in binary data
     void loadTargetPack();

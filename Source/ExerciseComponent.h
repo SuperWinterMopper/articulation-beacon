@@ -26,19 +26,18 @@ public:
     std::function<void()> homeButtonClick;
 
 private:
-    //scoreState is a crucial ValueTree object that keeps track of the state of the application's metronome, video, DSP, etc
-    juce::ValueTree scoreState;
+    // IMPORTANT: Declare state before components that depend on it
+    juce::ValueTree scoreState;   // score/metronome/video/DSP state
+    juce::ValueTree curView;      // reflects app view state (shared from MainComponent)
 
-    //This viewState owned by ExerciseComponent points to the viewState owned by MainComponent.
-    //In other words, the viewState here reflects the current view state of the app
-    juce::ValueTree curView;
-
-    int exerciseID = 0; //0 for safety
+    int exerciseID = 0; // 0 for safety
     ViewOptions thisComponentView;
-    VideoPlayer videoPlayer{ scoreState };
-    Navbar navBar{scoreState, thisComponentView};
-    Metronome metronome {defaultBPM, scoreState, exerciseID, false};
-    Graph graph;
+
+    // Dependent components (constructed in .cpp initializer list)
+    VideoPlayer videoPlayer;  
+    Navbar navBar;            
+    Metronome metronome;     
+    Graph graph;             
 
     void valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifier& property) override;
 

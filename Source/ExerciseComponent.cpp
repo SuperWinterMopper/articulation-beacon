@@ -2,9 +2,17 @@
 #include "ExerciseComponent.h"
 
 //==============================================================================
-ExerciseComponent::ExerciseComponent(int exerciseID, ViewOptions thisComponentView, juce::ValueTree a_viewState)
-    : exerciseID(exerciseID), thisComponentView(thisComponentView), curView(a_viewState), scoreState(scoreStateIdentifier), graph(scoreState, exerciseID)
+ExerciseComponent::ExerciseComponent(int exerciseID_, ViewOptions thisComponentView_, juce::ValueTree a_viewState)
+    : scoreState(scoreStateIdentifier)
+    , curView(a_viewState)
+    , exerciseID(exerciseID_)
+    , thisComponentView(thisComponentView_)
+    , videoPlayer(scoreState)
+    , navBar(scoreState, thisComponentView)
+    , metronome(defaultBPM, scoreState, exerciseID, true)
+    , graph(scoreState, exerciseID)
 {
+    DBG("ExerciseComponent ctor: exerciseID=" << exerciseID << ", view=" << (int)thisComponentView);
     curView.addListener(this);
     scoreState.addListener(this);
 
