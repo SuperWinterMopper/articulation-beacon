@@ -7,6 +7,7 @@
 #include "TargetPack.h"
 #include <unordered_set>
 #include <atomic>
+#include "GraphDrawer.h"
 
 class Graph : public juce::Component, private juce::ValueTree::Listener, private juce::Timer
 {
@@ -109,15 +110,15 @@ private:
     };
     LeakyMaxNormalizer norm;
 
-    struct ArticulationWindow {
-        int64_t onsetSample = 0;
-        int onsetSampleIndex = 0;
-        int64_t sustainSample = 0;
-        int sustainSampleIndex = 0; 
-        std::vector<float> flux;
-        std::vector<float> amps;
-        std::vector<float> cents; 
-    };
+    //struct ArticulationWindow {
+    //    int64_t onsetSample = 0;
+    //    int onsetSampleIndex = 0;
+    //    int64_t sustainSample = 0;
+    //    int sustainSampleIndex = 0; 
+    //    std::vector<float> flux;
+    //    std::vector<float> amps;
+    //    std::vector<float> cents; 
+    //};
     //This denotes how many samples before onset and after sustain we should include. 
     //Will not always be of this size due to how we analyze the fifo but usually will be this.
     int detectionPaddingSize = 10;
@@ -135,6 +136,9 @@ private:
 
     // audio thread only. the totalSamplesProcessed value, ie the corresponding onsetSample, of the lastmost detected onset. 
     int64_t lastOnsetCooldownAnchor = -1;
+
+    ArticulationWindow emptyUser, emptyTarget;
+    GraphDrawer graphDrawer;
 
     //audio thread only. to easily look up if an articulation has been included in snapShots yet
     std::unordered_set<int64_t> foundOnsetSamples; 
@@ -159,6 +163,7 @@ private:
     void printWindowData(const ArticulationWindow& window);
     float computeSpectralCentroid(float* mags);
     void printMetaData();
+    void drawGraph(const ArticulationWindow& user, const ArticulationWindow& target);
 
     //for reading in binary data
     void loadTargetPack();

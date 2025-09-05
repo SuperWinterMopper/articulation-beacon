@@ -6,7 +6,8 @@ Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) :
     scoreState(scoreState), 
     exerciseDataIndex(exerciseDataIndex), 
     hannWindow(fftSize + 1, juce::dsp::WindowingFunction<float>::WindowingMethod::hann, false),
-    spectrogramImage(juce::Image::RGB, 512, 512, true)
+    spectrogramImage(juce::Image::RGB, 512, 512, true),
+    graphDrawer(emptyUser, emptyTarget, 44100)
 {
     scoreState.addListener(this);
 
@@ -15,6 +16,8 @@ Graph::Graph(juce::ValueTree scoreState, int exerciseDataIndex) :
     //reserve memory. snapShots.resize because compiler is shitty and can't parse normal size
     snapShots.resize(abstractFifoCapacity);
     foundOnsetSamples.reserve(abstractFifoCapacity);
+    addAndMakeVisible(graphDrawer);
+    graphDrawer.setBounds(getLocalBounds());
     updateMetaData();
 }
 
@@ -96,21 +99,26 @@ void Graph::drawNextLineOfSpectrogram() {
 void Graph::renderSnapShotGraph(const ArticulationWindow& user) {
     // printWindowData(window);
 
-    for(ArticulationWindow& target : targetArticulations) {
+    for(const ArticulationWindow& target : targetArticulations) {
         if(target.onsetSample >= user.onsetSample) {
             DBG("Identified correspondoing target articulation window, target data is: ");
             printWindowData(target);
             DBG("user data is: ");
             printWindowData(user);
 
+            graphDrawer.setData(user, target, sampleRate);
 
-            jassert(false);
+            //jassert(false);
         }
     }
 
     DBG("Did not find corresponding target articulation window");
 
     repaint();
+}
+
+void Graph::drawGraph(const ArticulationWindow& user, const ArticulationWindow& target) {
+
 }
 
 void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
@@ -163,11 +171,11 @@ void Graph::processInputSample(float sample) {
     fifoIndex += 1;
     if (fifoIndex == fftSize) {
         fifoIndex = 0;
-         if (!nextFFTBlockReady) {
-            std::fill(fftData.begin(), fftData.end(), 0.0f);
-            std::copy(fifo.begin(), fifo.end(), fftData.begin());
-            nextFFTBlockReady = true;
-         }
+         //if (!nextFFTBlockReady) {
+         //   std::fill(fftData.begin(), fftData.end(), 0.0f);
+         //   std::copy(fifo.begin(), fifo.end(), fftData.begin());
+         //   nextFFTBlockReady = true;
+         //}
     }
     
     totalSamplesProcessed += 1;
@@ -282,13 +290,13 @@ void Graph::performFluxScan() {
                         pending.onsetSample = onsetSample;
                         pending.onsetSampleIndex = onsetInit;
                         havePending = true;
-                        DBG("Found articulation in performFluxScan");
+                        //DBG("Found articulation in performFluxScan");
                     }
                 }
             }
         }
         else {
-            //if ((fluxTimeData[i] - pending.onsetSample) / sampleRate < .03) break; //ensure 30ms gap
+            if ((fluxTimeData[i] - pending.onsetSample) / sampleRate < .03) continue; //ensure 30ms gap
             // Look ahead window 
             int end = std::min(i + (int) metaData.minFramesBetweenNotes, fluxSize);
             double avg = 0.0;
@@ -298,7 +306,7 @@ void Graph::performFluxScan() {
                 count++;
             }
             avg /= std::max(1, count);
-            DBG("looking for sustain, avg=" << avg << " at i=" << i << " end=" << end);
+            //DBG("looking for sustain, avg=" << avg << " at i=" << i << " end=" << end);
 
             if (avg < metaData.sustainThresholdValue) {
                 // Register sustain
@@ -396,7 +404,8 @@ void Graph::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Identifi
 }
 
 void Graph::resized() {
-     printMetaData();
+    graphDrawer.setBounds(getLocalBounds());
+    printMetaData();
 }
 
 void Graph::printMetaData() {
@@ -432,8 +441,8 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
 }
 
 void Graph::updateMetaData() {
-    DBG("Updating Graph MetaData based on ValueTree and exerciseDataIndex");
-    DBG("Updating Graph MetaData based on ValueTree and exerciseDataIndex");
+    //DBG("Updating Graph MetaData based on ValueTree and exerciseDataIndex");
+    //DBG("Updating Graph MetaData based on ValueTree and exerciseDataIndex");
     // exerciseDataIndex here refers to the exercise ID (0..NUM_EXERCISES-1)
     const int exId = juce::jlimit(0, (int)exerciseTempo.size() - 1, exerciseDataIndex);
 

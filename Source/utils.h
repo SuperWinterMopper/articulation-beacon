@@ -4,6 +4,16 @@
 
 static const size_t NUM_EXERCISES = 10;
 
+struct ArticulationWindow {
+	int64_t onsetSample = 0;
+	int onsetSampleIndex = 0;
+	int64_t sustainSample = 0;
+	int sustainSampleIndex = 0;
+	std::vector<float> flux;
+	std::vector<float> amps;
+	std::vector<float> cents;
+};
+
 enum class ViewOptions {
 	HOME,
 	EX1,
