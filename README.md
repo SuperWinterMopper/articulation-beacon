@@ -2,9 +2,7 @@
 
 **Real-time C++/JUCE music education app for measuring trumpet articulation speed, timbre, and shape with graphical feedback.**
 
-> Add your images here:
-- ![App Overview](docs/images/app-overview.png)
-- ![Articulation Graph](docs/images/graph.png)
+- ![Articulation Graph](images/smiley.png)
 
 Music students get tons of subjective feedback on articulation ("softer", "more staccato!"). **Articulation Beacon** quantifies that feedback in real time and turns it into **visuals**:
 - **Onset accuracy** (how close you start to the beat/target)
