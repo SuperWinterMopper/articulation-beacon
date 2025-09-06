@@ -14,9 +14,10 @@ public:
     {
         setOpaque (true);
 
-        // Replace with your assets (or embed via BinaryData).
+    juce::File faceIconFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory().getChildFile("Resources/smiley.png");
+    juce::File startIconFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getParentDirectory().getChildFile("Resources/downarrow.png");
 
-    // faceIcon_ should be the face displayed above; startIcon_ should be arrow markers on lines.
+
     faceIcon_  = juce::ImageFileFormat::loadFrom (juce::File ("C:/Users/afkhe/Downloads/smiley.png"));
     startIcon_ = juce::ImageFileFormat::loadFrom (juce::File ("C:/Users/afkhe/Downloads/downarrow.png"));
     }
@@ -29,13 +30,11 @@ public:
     void paint (juce::Graphics& g) override {
         g.fillAll (juce::Colours::white);
 
-        // --- Layout ---
         auto outer  = getLocalBounds().toFloat().reduced (10.0f);
         auto topBar = outer.removeFromTop (28.0f);
         auto xAxis  = outer.removeFromBottom (24.0f);
         auto plot   = outer.reduced (6.0f);
 
-        // Title + face icon (placeholder)
         g.setColour (juce::Colours::black.withAlpha (0.88f));
         g.setFont (juce::Font (15.0f, juce::Font::bold));
         g.drawText ("Articulation Graph", topBar.toNearestInt(), juce::Justification::centredLeft);
@@ -52,7 +51,6 @@ public:
         const int Nu = (int) user_.amps.size();
         const int Nt = (int) target_.amps.size();
 
-        // Draw axes if nothing usable
         if (Nu == 0 && Nt == 0)
         {
             drawAxes (g, plot, xAxis, /*tStart*/ 0.0, /*span*/ 1.0);
@@ -73,13 +71,6 @@ public:
         const double tU1 = tU0 + dU;
         const double tT1 = tT0 + dT;
 
-        // ------------------------- ALIGN ENDS MODE -------------------------
-        // Always align the END of each series at the right edge of the plot.
-        // Each series keeps its internal temporal shape; shorter series simply
-        // start later (further to the right) so that both ends coincide. The
-        // X axis becomes 0..max(dU,dT) seconds. Colour gradients are applied
-        // relative to each series' own local progress (not global X), so a
-        // shorter user line still travels from grey->yellow over its own span.
         {
             static constexpr bool kAlignEndsMode = true; // toggle if needed
             if (kAlignEndsMode)
@@ -103,7 +94,6 @@ public:
                     return;
                 }
 
-                // Discretization based on plot width
                 const int N = juce::jlimit (120, 1200, (int) std::round (plot.getWidth()));
                 if (N < 2)
                 {
@@ -134,8 +124,6 @@ public:
                     return lerp (aa, bb, t);
                 };
 
-                // Guarantee each series occupies at least half the axis width for visibility.
-                // We warp (stretch) shorter series visually only; axis labels still reflect maxDur.
                 double displayDurU = dU;
                 if (dU > 0.0 && dU < 0.5 * maxDur)
                     displayDurU = 0.5 * maxDur;
@@ -191,7 +179,6 @@ public:
                     }
                 }
 
-                // Independent per-series amplitude normalization (reuse logic)
                 auto finiteMinMax = [] (const std::vector<float>& v, float fbMin, float fbMax){
                     float mn =  std::numeric_limits<float>::infinity();
                     float mx = -std::numeric_limits<float>::infinity();
@@ -206,7 +193,6 @@ public:
                 auto mapYUser = [&] (float a){ return juce::jmap(a, uMin, uMax, plot.getBottom(), plot.getY()); };
                 auto mapYTarget = [&] (float a){ return juce::jmap(a, tMin, tMax, plot.getBottom(), plot.getY()); };
 
-                // Drawing with per-series progress colour gradients
                 auto drawSeries = [&] (const char* label,
                                        const std::vector<float>& Y,
                                        const std::vector<uint8_t>& present,
@@ -281,24 +267,22 @@ public:
                     }
                 };
                 drawStartMarker(true,  startDisplayAxisU, dU, yU_, presentU_);
-                // For target, use display start (may be earlier if stretched)
+
                 drawStartMarker(false, startDisplayAxisT, dT, yT_, presentT_);
 
-                // Axes (0..maxDur seconds)
+
                 drawAxes (g, plot, xAxis, 0.0, maxDur);
                 DBG("AlignEndsMode complete NtFull=" << NtFull << " NtSlice=" << NtSlice << " dT_original=" << dT_original << " dT_trunc=" << dT);
-                return; // Early return; skip legacy time-window / overlay logic below
+                return; 
             }
         }
 
-        // Global time window: from earliest start to latest end (initial)
         double tStart = std::min (tU0, tT0);
         double tEnd   = std::max (tU1, tT1);
         double span = tEnd - tStart;
         if (Nu > 0 && Nt == 0) { tStart = tU0; tEnd = tU1; span = tEnd - tStart; }
         else if (Nt > 0 && Nu == 0) { tStart = tT0; tEnd = tT1; span = tEnd - tStart; }
 
-        // (A) Clamp to a 300 ms window anchored to the latest end time
         static constexpr double kViewWindow = 0.30; // 300 ms
         {
             const bool uOK = (Nu > 0);
@@ -321,7 +305,6 @@ public:
         DBG("TimeWindow tStart=" << tStart << " tEnd=" << tEnd << " span=" << span
             << " tU0=" << tU0 << " tU1=" << tU1 << " tT0=" << tT0 << " tT1=" << tT1);
 
-        // --- Ranges (skip non-finite) ---
         const auto [amin, amax] = minMaxFinite (user_.amps, target_.amps, 0.0f, 1.0f);
         // (C) Ensure visible dynamic range for amplitudes (prevent "flat" look)
         float a0 = amin, a1 = amax;
@@ -333,15 +316,6 @@ public:
         }
         DBG("AmplitudeRange raw amin=" << amin << " amax=" << amax << " -> expanded a0=" << a0 << " a1=" << a1
             << " Nu=" << Nu << " Nt=" << Nt);
-        // (Optional) dB scaling alternative:
-        // const bool useDb = false; // toggle to true to enable dB view
-        // auto toDb = [] (float a) { return 20.0f * std::log10 (std::max (std::abs (a), 1e-9f)); };
-        // float dbMin =  1e9f, dbMax = -1e9f;
-        // if (useDb) {
-        //     auto scanDb = [&] (const std::vector<float>& v){ for (float x : v) { float d = toDb (x); dbMin = std::min (dbMin,d); dbMax = std::max (dbMax,d); } }; 
-        //     scanDb(user_.amps); scanDb(target_.amps);
-        //     if (!(std::isfinite (dbMin) && std::isfinite (dbMax)) || dbMax - dbMin < 1.0f) { dbMin = -80.0f; dbMax = 0.0f; }
-        // }
         const auto [cmin, cmax] = minMaxFinite (user_.cents, target_.cents, 0.0f, 1.0f);
 
         // --- Discretization ---
@@ -367,8 +341,6 @@ public:
         };
         auto mapY = [&] (float amp)
         {
-            // if dB scaling is enabled (see above), map in dB domain; else linear with expanded range
-            // if (useDb) { float d = 20.0f * std::log10 (std::max (std::abs (amp), 1e-9f)); return juce::jmap (d, dbMin, dbMax, plot.getBottom(), plot.getY()); }
             return juce::jmap (amp, a0, a1, plot.getBottom(), plot.getY());
         };
         auto lerp = [] (float a, float b, float t) { return a + (b - a) * t; };
@@ -449,7 +421,6 @@ public:
                     presentT_[i] = 1;
                 }
             }
-            // Override axis labeling to normalized (0..1 span)
             tStart = 0.0; span = 1.0; tEnd = 1.0;
         }
         else
@@ -492,7 +463,6 @@ public:
             }
         }
 
-        // --- Shaded areas: fill for each contiguous overlap [i0..i1] ---
         auto fillOverlaps = [&]()
         {
             int i = 0;
@@ -549,7 +519,6 @@ public:
             const juce::Colour yellow   = juce::Colours::yellow;
             int segs = 0; int presentCount = 0; float yMin= std::numeric_limits<float>::infinity(); float yMax = -yMin;
             for (int i = 0; i < N; ++i) if (present[i]) { ++presentCount; yMin = std::min(yMin, Y[i]); yMax = std::max(yMax, Y[i]); }
-            // Determine if this series shares identical samples with the other (possible overlay fallback)
             if (isUser && yT_.size()==Y.size()) {
                 int eq=0; for (size_t k=0;k<Y.size();++k) if (present[k] && presentT_[k] && std::abs(Y[k]-yT_[k]) < 1e-9f) ++eq; 
                 DBG("User/Target identical sample count=" << eq << " of " << Y.size());
@@ -565,7 +534,6 @@ public:
                 const float tProg = (float) i / (float) (N - 1);
                 float tC = 0.0f;
                 if (isUser) {
-                    // User: earlier + faster transition. Start gentle tint at 10%, reach 60% yellow by 40%, then ramp to full.
                     static constexpr float kUserEarlyStart = 0.10f;
                     static constexpr float kUserMid = 0.40f;
                     if (tProg <= kUserEarlyStart) {
@@ -615,7 +583,6 @@ public:
             }
         };
         if (!overlayMode) {
-            // Adjust marker Y using per-series normalization
             auto drawStartMarker = [&] (const SeriesView& S, bool isUser)
             {
                 if (!S.valid()) return;
@@ -637,7 +604,6 @@ public:
             drawStartMarker(U,true);
         }
 
-        // --- Axes + X ticks (absolute seconds) ---
         drawAxes (g, plot, xAxis, tStart, span);
 
         DBG("Summary Nu=" << Nu << " Nt=" << Nt
@@ -667,8 +633,6 @@ private:
     // Scratch
     std::vector<float>    yU_, yT_, cU_, cT_, tmpX_;
     std::vector<uint8_t>  presentU_, presentT_;
-
-    // Helpers ----------------------------------------------------------
 
     static std::pair<float, float> minMaxFinite (const std::vector<float>& a,
                                                  const std::vector<float>& b,
