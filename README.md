@@ -2,9 +2,9 @@
 
 **Real-time C++/JUCE music education app for measuring trumpet articulation speed, timbre, and shape with graphical feedback.**
 
-- ![Articulation Graph](images/smiley.png)
+![Articulation Graph](images/smiley.png)
 
-Music students get tons of subjective feedback on articulation ("softer", "more staccato!"). **Articulation Beacon** quantifies that feedback in real time and turns it into **visuals**:
+Music students get tons of subjective feedback on articulation ("softer", "more staccato!"). **Articulation Beacon** quantifies that feedback in real time and turns it into **visuals** for beginner musicians:
 - **Onset accuracy** (how close you start to the beat/target)
 - **Timbre accuracy** (how appropriate your timbre is)
 - **Shape accuracy** (overal amplitude shape)
@@ -26,13 +26,12 @@ Music students get tons of subjective feedback on articulation ("softer", "more 
 ## How it works (high level)
 
 1. **Input**: Audio is read from the selected input device into a lock-free FIFO.  
-2. **FFT**: Frames of size **2048** with **hop 512** are windowed and transformed.  
+2. **FFT**: Audio is chunked into frames and FFT is applied.  
 3. **Metrics**:
-   - **Spectral flux** (onset + sustain detection) with smoothing + adaptive thresholding  
-   - **Amplitude envelope** (RMS) for shape correlation 
+   - **Spectral flux** (onset, sustain detection) with smoothing + adaptive thresholding  
+   - **Amplitude envelope** for shape correlation 
    - **Spectral centroid** for timbre tracking  
-4. **Visualization**: `Graph` paints metrics and window markers
-
+4. **Visualization**: `Graph` paints visual representation of articulation
 ---
 
 ## Getting started
