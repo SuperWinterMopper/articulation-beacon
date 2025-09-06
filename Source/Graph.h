@@ -110,15 +110,6 @@ private:
     };
     LeakyMaxNormalizer norm;
 
-    //struct ArticulationWindow {
-    //    int64_t onsetSample = 0;
-    //    int onsetSampleIndex = 0;
-    //    int64_t sustainSample = 0;
-    //    int sustainSampleIndex = 0; 
-    //    std::vector<float> flux;
-    //    std::vector<float> amps;
-    //    std::vector<float> cents; 
-    //};
     //This denotes how many samples before onset and after sustain we should include. 
     //Will not always be of this size due to how we analyze the fifo but usually will be this.
     int detectionPaddingSize = 10;
@@ -163,8 +154,7 @@ private:
     void printWindowData(const ArticulationWindow& window);
     float computeSpectralCentroid(float* mags);
     void printMetaData();
-    void drawGraph(const ArticulationWindow& user, const ArticulationWindow& target);
-
+    
     //for reading in binary data
     void loadTargetPack();
 

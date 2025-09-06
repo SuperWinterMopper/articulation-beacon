@@ -13,10 +13,7 @@ VideoPlayer::VideoPlayer(juce::ValueTree a_scoreState) : scoreState(a_scoreState
 
 VideoPlayer::~VideoPlayer()
 {
-    // Stop playback first so no more frames/audio are requested
     video.stop();
-
-    // Then drop the listener we added in the ctor
     scoreState.removeListener(this);
 }
 
@@ -43,21 +40,19 @@ void VideoPlayer::valueTreePropertyChanged(juce::ValueTree& tree, const juce::Id
             video.setAudioVolume(defaultAudioLevel);
         }
     }
-
     //add more state updates if needed
 }
 
 void VideoPlayer::paint (juce::Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
+    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
     g.setColour (juce::Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
 
     g.setColour (juce::Colours::white);
     g.setFont (juce::FontOptions (14.0f));
     g.drawText ("VideoPlayer", getLocalBounds(),
-                juce::Justification::centred, true);   // draw some placeholder text
+                juce::Justification::centred, true);  
 }
 
 void VideoPlayer::resized()

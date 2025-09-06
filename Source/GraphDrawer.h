@@ -1,3 +1,5 @@
+// This component is heavily AI-assisted.
+
 #pragma once
 
 #include <JuceHeader.h>

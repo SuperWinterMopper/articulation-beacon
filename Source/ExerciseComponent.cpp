@@ -3,14 +3,7 @@
 
 //==============================================================================
 ExerciseComponent::ExerciseComponent(int exerciseID_, ViewOptions thisComponentView_, juce::ValueTree a_viewState)
-    : scoreState(scoreStateIdentifier)
-    , curView(a_viewState)
-    , exerciseID(exerciseID_)
-    , thisComponentView(thisComponentView_)
-    , videoPlayer(scoreState)
-    , navBar(scoreState, thisComponentView)
-    , metronome(defaultBPM, scoreState, exerciseID, true)
-    , graph(scoreState, exerciseID)
+    : scoreState(scoreStateIdentifier), curView(a_viewState), exerciseID(exerciseID_), thisComponentView(thisComponentView_), videoPlayer(scoreState), navBar(scoreState, thisComponentView), metronome(defaultBPM, scoreState, exerciseID, false), graph(scoreState, exerciseID)
 {
     DBG("ExerciseComponent ctor: exerciseID=" << exerciseID << ", view=" << (int)thisComponentView);
     curView.addListener(this);
@@ -183,21 +176,3 @@ void ExerciseComponent::configScoreState() {
     scoreState.setProperty(isVideoPlaying, false, nullptr);
     scoreState.setProperty(startTime, "Unstarted", nullptr);
 }
-
-//void ExerciseComponent::configInputOutput() {
-//
-//    int inputChannels = 0, outputChannels = 2;
-//
-//    // Some platforms require permissions to open input channels so request that here
-//    if (juce::RuntimePermissions::isRequired(juce::RuntimePermissions::recordAudio)
-//        && !juce::RuntimePermissions::isGranted(juce::RuntimePermissions::recordAudio))
-//    {
-//        juce::RuntimePermissions::request(juce::RuntimePermissions::recordAudio,
-//            [&](bool granted) { setAudioChannels(granted ? inputChannels : 0, outputChannels); });
-//    }
-//    else
-//    {
-//        // Specify the number of input and output channels that we want to open
-//        setAudioChannels(inputChannels, outputChannels);
-//    }
-//}

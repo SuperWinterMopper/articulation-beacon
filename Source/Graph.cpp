@@ -74,25 +74,21 @@ void Graph::drawNextLineOfSpectrogram() {
     auto rightHandEdge = spectrogramImage.getWidth() - 1;
     auto imageHeight = spectrogramImage.getHeight();
 
-    // first, shuffle our image leftwards by 1 pixel..
-    spectrogramImage.moveImageSection(0, 0, 1, 0, rightHandEdge, imageHeight);         // [1]
+    spectrogramImage.moveImageSection(0, 0, 1, 0, rightHandEdge, imageHeight);
 
-    // then render our FFT data..
-    fft.performFrequencyOnlyForwardTransform(fftData.data());                   // [2]
+    fft.performFrequencyOnlyForwardTransform(fftData.data());
 
-    // find the range of values produced, so we can scale our rendering to
-    // show up the detail clearly
-    auto maxLevel = juce::FloatVectorOperations::findMinAndMax(fftData.data(), fftSize / 2); // [3]
+    auto maxLevel = juce::FloatVectorOperations::findMinAndMax(fftData.data(), fftSize / 2);
 
-    juce::Image::BitmapData bitmap{ spectrogramImage, rightHandEdge, 0, 1, imageHeight, juce::Image::BitmapData::writeOnly }; // [4]
+    juce::Image::BitmapData bitmap{ spectrogramImage, rightHandEdge, 0, 1, imageHeight, juce::Image::BitmapData::writeOnly };
 
-    for (auto y = 1; y < imageHeight; ++y)                                              // [5]
+    for (auto y = 1; y < imageHeight; ++y)
     {
         auto skewedProportionY = 1.0f - std::exp(std::log((float)y / (float)imageHeight) * 0.2f);
         auto fftDataIndex = (size_t)juce::jlimit(0, fftSize / 2, (int)(skewedProportionY * fftSize / 2));
         auto level = juce::jmap(fftData[fftDataIndex], 0.0f, juce::jmax(maxLevel.getEnd(), 1e-5f), 0.0f, 1.0f);
 
-        bitmap.setPixelColour(0, y, juce::Colour::fromHSV(level, 1.0f, level, 1.0f)); // [6]
+        bitmap.setPixelColour(0, y, juce::Colour::fromHSV(level, 1.0f, level, 1.0f));
     }
 }
 
@@ -105,8 +101,10 @@ void Graph::renderSnapShotGraph(const ArticulationWindow& user) {
             printWindowData(target);
             DBG("user data is: ");
             printWindowData(user);
-
+            
+            //finally render our grah
             graphDrawer.setData(user, target, sampleRate);
+            return;
 
             //jassert(false);
         }
@@ -115,10 +113,6 @@ void Graph::renderSnapShotGraph(const ArticulationWindow& user) {
     DBG("Did not find corresponding target articulation window");
 
     repaint();
-}
-
-void Graph::drawGraph(const ArticulationWindow& user, const ArticulationWindow& target) {
-
 }
 
 void Graph::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
@@ -189,9 +183,6 @@ void Graph::processInputSample(float sample) {
 }
 
 void Graph::performAnalysis() {
-    //DBG("performAnalysis called");
-    //DBG("performAnalysis called");
-    //Copy data from fifo to fftData
     const float* inputPtr = fifo.data();
     float* fftPtr = fftData.data();
     std::memcpy(fftPtr, inputPtr + fifoIndex, (fftSize - fifoIndex) * sizeof(float));
@@ -433,31 +424,24 @@ void Graph::prepareToPlay(int samplesPerBlockExpected, double sr)
     for (int i = 0; i < numBins; i++) 
        freqBins[i] = i * binHz;
 
-    loadTargetPack(); //loads binary file for target articulation data
+    loadTargetPack();
 
-    // Mirror analyze flag into RT-safe atomic
     bool analyzing = scoreState.hasProperty(isAnalyzing) ? (bool)scoreState.getProperty(isAnalyzing) : false;
     analyzingActive.store(analyzing, std::memory_order_relaxed);
 }
 
 void Graph::updateMetaData() {
-    //DBG("Updating Graph MetaData based on ValueTree and exerciseDataIndex");
-    //DBG("Updating Graph MetaData based on ValueTree and exerciseDataIndex");
-    // exerciseDataIndex here refers to the exercise ID (0..NUM_EXERCISES-1)
     const int exId = juce::jlimit(0, (int)exerciseTempo.size() - 1, exerciseDataIndex);
 
-    // Compute base index into ExerciseData by summing number of tempo variants of prior exercises
     int base = 0;
     for (int e = 0; e < exId; ++e) base += (int)exerciseTempo[e].size();
 
-    // Clamp tempo selection to available variants for this exercise
     int tempoValue = scoreState.hasProperty(tempo) ? static_cast<int>(scoreState.getProperty(tempo)) : 0;
     const int variants = (int)exerciseTempo[exId].size();
     tempoValue = juce::jlimit(0, juce::jmax(0, variants - 1), tempoValue);
 
     const int index = base + tempoValue;
 
-    // Verify index is within bounds of ExerciseData array
     if (index < 0 || index >= static_cast<int>(std::size(ExerciseData))) {
         DBG("Graph::updateMetaData ERROR: computed index=" << index << " out of range (size=" << std::size(ExerciseData) << ") exId=" << exId << " base=" << base << " tempoValue=" << tempoValue << " variants=" << variants);
         jassertfalse;
@@ -515,10 +499,7 @@ void Graph::reset() {
 
 void Graph::releaseResources()
 {
-    // This will be called when the audio device stops, or when it is being
-    // restarted due to a setting change.
 
-    // For more details, see the help for AudioProcessor::releaseResources()
 }
 
 //note this must be called after `prepareToPlay`, since it needs sampleRate to be known

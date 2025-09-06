@@ -2,10 +2,6 @@
 #include <cmath>
 #include <cstring>
 
-// Streaming Gaussian FIR for 1-D sequences (e.g., spectral flux).
-// - TAPS must be odd (e.g., 7) and small (7–11 is typical).
-// - setSigma() builds a normalized Gaussian kernel.
-// - process(x) returns the smoothed value with a fixed group delay of (TAPS-1)/2 frames.
 template<int TAPS>
 class GaussianFIR {
     static_assert(TAPS % 2 == 1, "TAPS must be odd");
@@ -16,7 +12,7 @@ public:
         if (sigma <= 0.0f) sigma = 1e-6f;
         const int radius = (TAPS - 1) / 2;
         float sum = 0.0f;
-        for (int n = -radius; n <= radius; ++n) {
+        for (int n = -radius; n <= radius; n++) {
             const float g = std::exp(-(n * n) / (2.0f * sigma * sigma));
             h_[n + radius] = g;
             sum += g;
@@ -30,7 +26,6 @@ public:
         w_ = 0;
     }
 
-    // One new flux sample in -> one smoothed sample out.
     float process(float x) {
         z_[w_] = x;
 
