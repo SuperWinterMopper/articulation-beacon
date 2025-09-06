@@ -100,7 +100,7 @@ void Graph::renderSnapShotGraph(const ArticulationWindow& user) {
     // printWindowData(window);
 
     for(const ArticulationWindow& target : targetArticulations) {
-        if(target.onsetSample >= user.onsetSample) {
+        if(target.onsetSample < user.onsetSample) {
             DBG("Identified correspondoing target articulation window, target data is: ");
             printWindowData(target);
             DBG("user data is: ");
@@ -269,8 +269,8 @@ void Graph::performFluxScan() {
     //Make fluxData [0... fluxSize - 1] of flux values, similar for fluxTimeData 
     copyFluxFifoToData();
 
-    DBG("performFluxScan called, printing metadata");
-    printMetaData();
+    //DBG("performFluxScan called, printing metadata");
+    //printMetaData();
 
     int onsetInit = 0;
 

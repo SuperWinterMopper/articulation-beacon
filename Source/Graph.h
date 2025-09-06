@@ -29,7 +29,7 @@ void releaseResources();
 void reset();
 void processInputSample(float sample);
 
-    void timerCallback() override;
+void timerCallback() override;
 
 private:
     juce::ValueTree scoreState;
